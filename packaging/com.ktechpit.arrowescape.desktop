@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=ArrowEscape
+GenericName=Arrow Puzzle
+Comment=A calm puzzle: slide every arrow off the board in the right order
+Exec=arrowescape
+Icon=com.ktechpit.arrowescape
+Terminal=false
+Categories=Game;LogicGame;Qt;
+Keywords=puzzle;arrows;logic;brain;relax;
+StartupNotify=true

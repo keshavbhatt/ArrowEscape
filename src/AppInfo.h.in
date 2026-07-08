@@ -1,0 +1,7 @@
+#pragma once
+
+// Generated from AppInfo.h.in by CMake — do not edit the generated copy.
+#define AE_APP_ID   "@AE_APP_ID@"
+#define AE_APP_NAME "@AE_APP_NAME@"
+#define AE_VERSION  "@PROJECT_VERSION@"
+#define AE_ORG_NAME "ktechpit"
