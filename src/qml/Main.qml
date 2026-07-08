@@ -19,6 +19,7 @@ ApplicationWindow {
     ArrowBoard { id: game }
 
     property bool soundOn: true
+    property bool musicOn: true
     property bool settingsOpen: false
     property int  screen: 0            // 0 = level select, 1 = play
     property int  highestUnlocked: 1
@@ -28,10 +29,11 @@ ApplicationWindow {
         category: "ArrowEscape"
         property alias highestUnlocked: win.highestUnlocked
         property alias soundOn: win.soundOn
+        property alias musicOn: win.musicOn
         property alias dark: themeProxy.dark
     }
     QtObject { id: themeProxy; property bool dark: false; onDarkChanged: Theme.dark = dark }
-    Component.onCompleted: Theme.dark = themeProxy.dark
+    Component.onCompleted: { Theme.dark = themeProxy.dark; if (win.musicOn) music.play(); }
 
     readonly property string difficulty:
         game.level <= 10  ? qsTr("Easy")
@@ -44,6 +46,15 @@ ApplicationWindow {
     SoundEffect { id: sfxWhoosh; source: "qrc:/assets/sounds/whoosh.wav";  volume: 0.6 }
     SoundEffect { id: sfxBlock;  source: "qrc:/assets/sounds/blocked.wav"; volume: 0.5 }
     SoundEffect { id: sfxWin;    source: "qrc:/assets/sounds/win.wav";     volume: 0.7 }
+
+    // Soft looping piano background music.
+    MediaPlayer {
+        id: music
+        source: "qrc:/assets/sounds/music.wav"
+        loops: MediaPlayer.Infinite
+        audioOutput: AudioOutput { volume: 0.5 }
+    }
+    onMusicOnChanged: musicOn ? music.play() : music.stop()
     Connections {
         target: game
         function onEscaped(id) { if (win.soundOn) sfxWhoosh.play(); }
@@ -282,6 +293,7 @@ ApplicationWindow {
                     IconButton { anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
                                  icon: "close"; onClicked: win.settingsOpen = false }
                 }
+                ToggleRow { label: qsTr("Music");     checked: win.musicOn; onToggled: win.musicOn = !win.musicOn }
                 ToggleRow { label: qsTr("Sound");     checked: win.soundOn; onToggled: win.soundOn = !win.soundOn }
                 ToggleRow { label: qsTr("Dark mode"); checked: Theme.dark;  onToggled: Theme.dark = !Theme.dark }
             }
