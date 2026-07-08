@@ -263,6 +263,13 @@ void ArrowBoard::generate(int rows, int cols, int lenMin, int lenMax, int longBi
         }
     }
 
+    // Drop any single-cell arrow that still couldn't be merged: an empty cell
+    // (a grid dot) looks better than a lone head-with-no-tail arrow. Removing an
+    // arrow only frees a cell, so the board stays solvable.
+    for (int i = m_arrows.size() - 1; i >= 0; --i)
+        if (m_arrows[i].cells.size() == 1)
+            m_arrows.remove(i);
+
     m_initial = m_arrows;
     m_initialCount = m_arrows.size();
     m_drops = m_maxDrops;
