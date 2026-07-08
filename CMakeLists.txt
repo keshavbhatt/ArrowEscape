@@ -103,6 +103,8 @@ target_link_libraries(arrowescape PRIVATE
 
 target_compile_definitions(arrowescape PRIVATE
     $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:QT_NO_DEBUG_OUTPUT>
+    # Debug-only testing aids (level jumper, unlock-all). Never defined in release.
+    $<$<CONFIG:Debug>:AE_DEBUG>
 )
 
 # ── Install (desktop integration) ─────────────────────────────────────────────

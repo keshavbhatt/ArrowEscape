@@ -34,10 +34,11 @@ ApplicationWindow {
     Component.onCompleted: Theme.dark = themeProxy.dark
 
     readonly property string difficulty:
-        game.level <= 5  ? qsTr("Easy")
-      : game.level <= 15 ? qsTr("Normal")
-      : game.level <= 40 ? qsTr("Hard")
-      :                    qsTr("Expert")
+        game.level <= 10  ? qsTr("Easy")
+      : game.level <= 45  ? qsTr("Normal")
+      : game.level <= 110 ? qsTr("Hard")
+      : game.level <= 200 ? qsTr("Expert")
+      :                     qsTr("Master")
 
     // ── Sound + progress ──────────────────────────────────────────────────────
     SoundEffect { id: sfxWhoosh; source: "qrc:/assets/sounds/whoosh.wav";  volume: 0.6 }
@@ -58,10 +59,17 @@ ApplicationWindow {
         anchors.fill: parent
         visible: win.screen === 0
         highestUnlocked: win.highestUnlocked
+        unlockAll: appDebug            // debug builds: every level is playable
         onPlay: (lvl) => { game.startLevel(lvl); win.screen = 1; }
         onOpenSettings: win.settingsOpen = true
         onToggleTheme: Theme.dark = !Theme.dark
     }
+
+    // Debug-only: [ / ] jump between levels while playing.
+    Shortcut { enabled: appDebug && win.screen === 1; sequence: "]"
+               onActivated: game.nextLevel() }
+    Shortcut { enabled: appDebug && win.screen === 1; sequence: "["
+               onActivated: if (game.level > 1) game.startLevel(game.level - 1) }
 
     // ── Game screen ───────────────────────────────────────────────────────────────
     Item {
@@ -141,10 +149,41 @@ ApplicationWindow {
             }
         }
 
+        // Debug-only level jumper.
+        Rectangle {
+            id: debugBar
+            visible: appDebug
+            anchors { top: topbar.bottom; left: parent.left; right: parent.right }
+            height: appDebug ? 36 : 0
+            color: Qt.rgba(Theme.select.r, Theme.select.g, Theme.select.b, 0.10)
+            Row {
+                anchors.centerIn: parent
+                spacing: 10
+                Text { anchors.verticalCenter: parent.verticalCenter
+                       text: "DEBUG"; color: Theme.select; font.pixelSize: 12; font.weight: Font.Bold }
+                TextField {
+                    id: jump
+                    width: 130; height: 26
+                    padding: 4
+                    placeholderText: qsTr("jump to level #")
+                    font.pixelSize: 13
+                    inputMethodHints: Qt.ImhDigitsOnly
+                    validator: IntValidator { bottom: 1; top: 999999 }
+                    onAccepted: {
+                        const n = parseInt(text);
+                        if (!isNaN(n) && n >= 1) { game.startLevel(n); }
+                        text = ""; focus = false;
+                    }
+                }
+                Text { anchors.verticalCenter: parent.verticalCenter
+                       text: qsTr("[ ] = prev / next"); color: Theme.textDim; font.pixelSize: 11 }
+            }
+        }
+
         Board {
             id: boardView
             board: game
-            anchors { top: topbar.bottom; left: parent.left; right: parent.right; bottom: toolbar.top; margins: 12 }
+            anchors { top: debugBar.bottom; left: parent.left; right: parent.right; bottom: toolbar.top; margins: 12 }
         }
 
         RowLayout {

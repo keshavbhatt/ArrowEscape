@@ -11,6 +11,7 @@ Item {
 
     property int highestUnlocked: 1
     property int totalLevels: 500
+    property bool unlockAll: false     // debug: make every level tappable
     signal play(int level)
     signal openSettings()
     signal toggleTheme()
@@ -71,7 +72,7 @@ Item {
             readonly property int lvl: index + 1
             readonly property bool completed: lvl < root.highestUnlocked
             readonly property bool current:   lvl === root.highestUnlocked
-            readonly property bool unlocked:  lvl <= root.highestUnlocked
+            readonly property bool unlocked:  root.unlockAll || lvl <= root.highestUnlocked
             width: grid.cellWidth
             height: grid.cellHeight
 

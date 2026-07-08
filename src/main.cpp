@@ -4,6 +4,7 @@
 #include <QGuiApplication>
 #include <QIcon>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include <QQuickStyle>
 #include <QQuickWindow>
 #include <QTimer>
@@ -25,6 +26,15 @@ int main(int argc, char *argv[])
     QQuickStyle::setStyle(QStringLiteral("Basic"));
 
     QQmlApplicationEngine engine;
+
+    // Expose whether this is a debug build to QML, which unlocks the in-app level
+    // jumper / unlock-all testing aids. Always set so `appDebug` is defined.
+#ifdef AE_DEBUG
+    engine.rootContext()->setContextProperty("appDebug", true);
+#else
+    engine.rootContext()->setContextProperty("appDebug", false);
+#endif
+
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
         []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);

@@ -96,7 +96,10 @@ private:
     int  key(int col, int row) const { return row * m_cols + col; }
     bool laneClear(int arrowIndex) const;     // head lane to the edge is empty
     void rebuildOwner();
-    void generate(int rows, int cols);        // dense, solvable-by-construction
+    // Fully-packed, solvable-by-construction via reverse peeling. lenMin/lenMax
+    // set snake length; longBiasPct is the % chance of peeling one of the longest
+    // available lanes (higher ⇒ arrows point deeper inward ⇒ more tangled/harder).
+    void generate(int rows, int cols, int lenMin, int lenMax, int longBiasPct);
     void setStatus(Status s);
 
     QVector<Arrow>    m_arrows;
