@@ -56,6 +56,22 @@ cmake --build build
 Requires Qt ≥ 6.5 (developed against 6.10) with `Quick`, `QuickControls2`,
 `Svg`, and `Multimedia`.
 
+## Packaging (Snap)
+
+The Snap Store build is defined in [`snap/snapcraft.yaml`](snap/snapcraft.yaml)
+(`core24`, `kde-neon-6` extension, strict confinement). It installs the binary,
+`.desktop`, AppStream metainfo and icon under `/usr`; `snapcraft`'s `parse-info`
+reads the summary/description/licence from the bundled metainfo.
+
+```sh
+snapcraft            # build arrowescape_*.snap
+snap install --dangerous ./arrowescape_*.snap   # local test install
+```
+
+Store assets (icons, screenshots, banner, LICENSE) live in the sibling
+**`arrowescape-packaging`** repo, which the metainfo's screenshot/licence URLs
+point at.
+
 ## Research
 
 Game study and design notes live in [`DOCS/00-game-study.md`](DOCS/00-game-study.md).

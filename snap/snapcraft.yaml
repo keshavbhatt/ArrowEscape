@@ -1,0 +1,60 @@
+name: arrowescape
+adopt-info: arrowescape
+license: Proprietary
+
+grade: stable
+confinement: strict
+base: core24
+compression: lzo
+
+icon: snap/gui/icon.png
+
+platforms:
+  amd64:
+  arm64:
+
+apps:
+  arrowescape:
+    command: usr/bin/arrowescape
+    desktop: usr/share/applications/com.ktechpit.arrowescape.desktop
+    common-id: com.ktechpit.arrowescape
+    extensions:
+      - kde-neon-6
+    environment:
+      IS_SNAP: '1'
+    plugs:
+      - opengl
+      - wayland
+      - x11
+      - desktop
+      - desktop-legacy
+      # Music + sound effects are looping SoundEffects (QAudioSink) — no
+      # MediaPlayer/ffmpeg — so only the audio-output service is needed.
+      - audio-playback
+      - alsa
+
+parts:
+  arrowescape:
+    source: .
+    plugin: cmake
+    # Pull summary / description / licence from the bundled AppStream metainfo.
+    parse-info:
+      - usr/share/metainfo/com.ktechpit.arrowescape.metainfo.xml
+    build-packages:
+      - libxkbcommon-dev
+      - libpulse-dev
+    cmake-parameters:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_PREFIX=/usr
+    override-build: |
+      craftctl default
+
+      # Point the desktop entry at the snap's packaged icon.
+      sed -i \
+        "s|^Icon=.*|Icon=\${SNAP}/meta/gui/icon.png|" \
+        ${CRAFT_PART_INSTALL}/usr/share/applications/com.ktechpit.arrowescape.desktop
+    prime:
+      - -usr/include
+      - -usr/lib/*/cmake
+      - -usr/share/man
+      - -usr/share/lintian

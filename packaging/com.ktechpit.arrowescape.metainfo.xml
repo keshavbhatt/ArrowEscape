@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.ktechpit.arrowescape</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary=https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/LICENSE</project_license>
+  <name>ArrowEscape</name>
+  <summary>A calm arrow-untangling puzzle</summary>
+
+  <developer id="com.ktechpit">
+    <name>Keshav Bhatt</name>
+  </developer>
+
+  <description>
+    <p>
+      ArrowEscape is a calm, meditative logic puzzle for your Linux desktop, built
+      around one simple idea: every board is a tightly packed tangle of arrows, and
+      your job is to slide them all off, one clear path at a time.
+    </p>
+    <p>
+      Every board is a tightly packed tangle of arrows. Tap an arrow to slide it
+      off the edge in the direction it points — but only when its path is clear.
+      Find the right order, unpick the tangle, and clear the board. Simple rules,
+      deep strategy, no timer.
+    </p>
+    <ul>
+      <li>Hundreds of hand-tight, fully-packed puzzles that always have a solution</li>
+      <li>Difficulty that climbs from a gentle Easy start to a huge, deeply tangled Master board</li>
+      <li>Satisfying slide-off animation and a soft piano soundtrack you can turn on or off</li>
+      <li>Zoomable, pannable board so the biggest levels stay easy to read</li>
+      <li>Light and dark themes; your progress and preferences are saved automatically</li>
+      <li>Fully offline — play anywhere, anytime</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">com.ktechpit.arrowescape.desktop</launchable>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#efe7d6</color>
+    <color type="primary" scheme_preference="dark">#2a2620</color>
+  </branding>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/01-play.png</image>
+      <caption>Unpick a tangled board of arrows one clear path at a time</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/02-master.png</image>
+      <caption>Difficulty climbs to huge, densely packed Master boards</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/03-levels.png</image>
+      <caption>Hundreds of levels with saved progress</caption>
+    </screenshot>
+  </screenshots>
+
+  <icon type="stock">com.ktechpit.arrowescape</icon>
+
+  <url type="homepage">https://ktechpit.com/USS/public/product.php?slug=arrowescape</url>
+  <url type="bugtracker">https://github.com/keshavbhatt/arrowescape-packaging/issues</url>
+  <url type="vcs-browser">https://github.com/keshavbhatt/arrowescape-packaging</url>
+  <url type="donation">https://www.paypal.me/keshavnrj/9</url>
+
+  <provides>
+    <binary>arrowescape</binary>
+  </provides>
+
+  <categories>
+    <category>Game</category>
+    <category>LogicGame</category>
+  </categories>
+
+  <keywords>
+    <keyword>puzzle</keyword>
+    <keyword>arrows</keyword>
+    <keyword>logic</keyword>
+    <keyword>brain</keyword>
+    <keyword>relax</keyword>
+  </keywords>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="0.1.0" date="2026-07-09">
+      <description>
+        <p>First public preview of ArrowEscape.</p>
+        <p>Hundreds of fully-packed arrow-untangling puzzles with a difficulty ramp from Easy to Master, a soft piano soundtrack, light and dark themes, a zoomable board and saved progress.</p>
+      </description>
+    </release>
+  </releases>
+
+  <update_contact>keshavnrj@gmail.com</update_contact>
+</component>
