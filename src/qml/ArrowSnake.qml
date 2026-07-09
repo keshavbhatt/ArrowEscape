@@ -52,10 +52,35 @@ Item {
     // it uses a tight bbox canvas.
     readonly property real ox: escaping ? 0 : (bb.minc * cellSize - m)
     readonly property real oy: escaping ? 0 : (bb.minr * cellSize - m)
+
     x: ox
     y: oy
     width:  escaping ? gridCols * cellSize : (bb.maxc - bb.minc + 1) * cellSize + 2 * m
     height: escaping ? gridRows * cellSize : (bb.maxr - bb.minr + 1) * cellSize + 2 * m
+
+    // ── Entrance animation ──
+    // On load each arrow DRAWS itself from tail to head — the line is traced into
+    // place and the arrowhead fades in at the end — so the board looks hand-sketched.
+    // `drawProgress` is the fraction of the snake drawn (0 = nothing, 1 = whole).
+    property real drawProgress: 0
+    onDrawProgressChanged: canvas.requestPaint()
+
+    // Stagger by distance from the nearest board edge (fills outside-in).
+    readonly property real introDelay: {
+        var cx = (bb.minc + bb.maxc) / 2, cy = (bb.minr + bb.maxr) / 2;
+        var d = Math.min(cx, gridCols - 1 - cx, cy, gridRows - 1 - cy);
+        return Math.max(0, d) * 26;
+    }
+
+    SequentialAnimation {
+        running: true
+        PauseAnimation { duration: snake.introDelay }
+        NumberAnimation {
+            target: snake; property: "drawProgress"; from: 0; to: 1
+            duration: Math.max(220, Math.min(560, snake.cells.length * 55))
+            easing.type: Easing.InOutSine
+        }
+    }
 
     Canvas {
         id: canvas
@@ -106,7 +131,55 @@ Item {
 
             if (!snake.escaping) {
                 var pts = snake.cells.map(pc);
-                drawArrow(pts);
+                if (snake.drawProgress >= 1) {
+                    drawArrow(pts);
+                    return;
+                }
+                if (snake.drawProgress <= 0.0001)
+                    return;                                   // not drawn yet
+
+                // Trace the shaft from the tail up to `shaftFrac` of its length
+                // (fully drawn a touch before the animation ends, so the head has
+                // something to attach to).
+                const shaftFrac = Math.min(1, snake.drawProgress / 0.85);
+                var seg = [];
+                for (var i = 1; i < pts.length; ++i)
+                    seg.push(Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
+                var total = 0; for (var i = 0; i < seg.length; ++i) total += seg[i];
+                var target = shaftFrac * total, acc = 0;
+                var partial = [pts[0]];
+                for (var i = 0; i < seg.length; ++i) {
+                    if (acc + seg[i] <= target) { partial.push(pts[i + 1]); acc += seg[i]; }
+                    else {
+                        var t = seg[i] > 0 ? (target - acc) / seg[i] : 0;
+                        partial.push({ x: pts[i].x + (pts[i + 1].x - pts[i].x) * t,
+                                       y: pts[i].y + (pts[i + 1].y - pts[i].y) * t });
+                        break;
+                    }
+                }
+                if (partial.length >= 2) {
+                    ctx.beginPath();
+                    ctx.moveTo(partial[0].x, partial[0].y);
+                    for (var i = 1; i < partial.length; ++i) ctx.lineTo(partial[i].x, partial[i].y);
+                    ctx.stroke();
+                }
+                // Arrowhead grows/fades in over the last stretch of the draw.
+                const ha = Math.max(0, Math.min(1, (snake.drawProgress - 0.8) / 0.2));
+                if (ha > 0) {
+                    const head = pts[pts.length - 1];
+                    const px = -dv[1], py = dv[0];
+                    const tip  = { x: head.x + dv[0] * cs * 0.36, y: head.y + dv[1] * cs * 0.36 };
+                    const bcx = head.x - dv[0] * cs * 0.02, bcy = head.y - dv[1] * cs * 0.02;
+                    const half = cs * 0.21 * ha;
+                    ctx.globalAlpha = ha;
+                    ctx.beginPath();
+                    ctx.moveTo(tip.x, tip.y);
+                    ctx.lineTo(bcx + px * half, bcy + py * half);
+                    ctx.lineTo(bcx - px * half, bcy - py * half);
+                    ctx.closePath();
+                    ctx.fillStyle = col; ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
                 return;
             }
 

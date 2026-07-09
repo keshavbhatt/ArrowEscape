@@ -133,6 +133,29 @@ int main(int argc, char *argv[])
             }, Qt::QueuedConnection);
     }
 
+    // Dev-only: AE_INTRO=<dir> grabs a burst of frames right at load to capture
+    // the board entrance animation. Inert unless set.
+    const QByteArray introDir = qgetenv("AE_INTRO");
+    if (!introDir.isEmpty()) {
+        QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app,
+            [introDir, startLevel, &app](QObject *obj, const QUrl &) {
+                auto *w = qobject_cast<QQuickWindow *>(obj);
+                if (!w) return;
+                w->setProperty("screen", 1);
+                if (startLevel > 0)
+                    if (auto *b = w->findChild<ArrowBoard *>()) b->startLevel(startLevel);
+                int *frame = new int(0);
+                auto grab = [w, introDir, frame]() {
+                    w->grabWindow().save(QString::fromUtf8(introDir)
+                        + QString("/i%1.png").arg(*frame, 3, 10, QChar('0')));
+                    ++(*frame);
+                };
+                for (int t = 0; t <= 18; ++t)
+                    QTimer::singleShot(t * 55, &app, grab);
+                QTimer::singleShot(1150, &app, [&app] { app.quit(); });
+            }, Qt::QueuedConnection);
+    }
+
     engine.loadFromModule("ArrowEscape", "Main");
 
     return app.exec();
