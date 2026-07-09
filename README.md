@@ -1,10 +1,9 @@
 # ArrowEscape
 
-A calm **slide-the-arrows-off-the-board** puzzle for the desktop, inspired by
-mobile titles like *Amaze GO!* and *Arrows – Puzzle Escape*.
+A calm **slide-the-arrows-off-the-board** puzzle for the desktop.
 
 Every arrow points a direction. **Click one to slide it off the board** — but
-only if its whole lane to the edge is clear. Blocked clicks cost a heart. Clear
+only if its whole lane to the edge is clear. Blocked clicks cost a life. Clear
 the board to win. It's pure move-order logic, no timer. Levels are generated
 **solvable by construction**, so a board can never be stranded.
 
