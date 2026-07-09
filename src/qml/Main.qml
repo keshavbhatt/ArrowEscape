@@ -23,6 +23,7 @@ ApplicationWindow {
     property real soundVolume: 0.6
     property real musicVolume: 0.5
     property bool settingsOpen: false
+    property bool aboutOpen: false
     property int  screen: 0            // 0 = level select, 1 = play
     property int  highestUnlocked: 1
 
@@ -306,6 +307,79 @@ ApplicationWindow {
                 SliderRow { label: qsTr("Sound volume"); on: win.soundOn; value: win.soundVolume
                             onMoved: (v) => win.soundVolume = v }
                 ToggleRow { label: qsTr("Dark mode"); checked: Theme.dark; onToggled: Theme.dark = !Theme.dark }
+                Item { width: 1; height: 6 }
+                PillButton {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width
+                    text: qsTr("About")
+                    fill: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.12); ink: Theme.text
+                    onClicked: { win.settingsOpen = false; win.aboutOpen = true; }
+                }
+            }
+        }
+    }
+
+    // ── About dialog ───────────────────────────────────────────────────────────────
+    Rectangle {
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.35)
+        visible: opacity > 0
+        opacity: win.aboutOpen ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        MouseArea { anchors.fill: parent; onClicked: win.aboutOpen = false }
+        Rectangle {
+            anchors.centerIn: parent
+            width: 340; radius: Theme.rlg; color: Theme.surface
+            implicitHeight: acol.implicitHeight + 36
+            MouseArea { anchors.fill: parent }
+            Column {
+                id: acol
+                anchors.centerIn: parent
+                width: parent.width - 44
+                spacing: 10
+
+                Item {
+                    width: parent.width; height: 22
+                    IconButton { anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                                 icon: "close"; iconSize: 18; onClicked: win.aboutOpen = false }
+                }
+                Image {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    source: "qrc:/assets/icons/com.ktechpit.arrowescape.svg"
+                    sourceSize: Qt.size(88, 88); width: 88; height: 88; smooth: true
+                }
+                Text { anchors.horizontalCenter: parent.horizontalCenter
+                       text: Qt.application.name; color: Theme.text
+                       font.pixelSize: 22; font.weight: Font.Bold }
+                Text { anchors.horizontalCenter: parent.horizontalCenter
+                       text: qsTr("Version %1").arg(Qt.application.version)
+                       color: Theme.textDim; font.pixelSize: 12 }
+                Text { width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
+                       text: qsTr("A calm arrow-untangling puzzle. Slide every arrow off the board, one clear path at a time.")
+                       color: Theme.textDim; font.pixelSize: 13 }
+
+                Rectangle { width: parent.width; height: 1
+                            color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.12) }
+
+                AboutLink { label: qsTr("Website");         sub: "ktechpit.com"
+                            url: "https://ktechpit.com/USS/public/product.php?slug=arrowescape" }
+                AboutLink { label: qsTr("Report an issue"); sub: "GitHub"
+                            url: "https://github.com/keshavbhatt/arrowescape-packaging/issues" }
+                AboutLink { label: qsTr("Support the app"); sub: qsTr("Donate")
+                            url: "https://www.paypal.me/keshavnrj/9" }
+                AboutLink { label: qsTr("More apps");       sub: qsTr("by KTechpit")
+                            url: "https://ktechpit.com/USS/public/products.php" }
+
+                Rectangle { width: parent.width; height: 1
+                            color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.12) }
+
+                Text { anchors.horizontalCenter: parent.horizontalCenter
+                       text: qsTr("Made by Keshav Bhatt · KTechpit")
+                       color: Theme.textDim; font.pixelSize: 12 }
+                Text { anchors.horizontalCenter: parent.horizontalCenter
+                       text: qsTr("© 2026 KTechpit. All rights reserved.")
+                       color: Qt.rgba(Theme.textDim.r, Theme.textDim.g, Theme.textDim.b, 0.8)
+                       font.pixelSize: 11 }
             }
         }
     }
@@ -328,6 +402,35 @@ ApplicationWindow {
         }
         MouseArea { id: tma; anchors.fill: parent; hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor; onClicked: parent.clicked() }
+    }
+
+    // A tappable link row for the About dialog.
+    component AboutLink: Item {
+        property string label: ""
+        property string sub: ""
+        property string url: ""
+        width: parent ? parent.width : 200
+        height: 38
+        Rectangle {
+            anchors.fill: parent
+            radius: Theme.rsm
+            color: la.containsMouse ? Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.07) : "transparent"
+        }
+        Text {
+            anchors.left: parent.left; anchors.leftMargin: 8; anchors.verticalCenter: parent.verticalCenter
+            text: parent.label; color: Theme.text; font.pixelSize: 13; font.weight: Font.DemiBold
+        }
+        Row {
+            anchors.right: parent.right; anchors.rightMargin: 8; anchors.verticalCenter: parent.verticalCenter
+            spacing: 6
+            Text { text: sub; color: Theme.textDim; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+            Text { text: "↗"; color: Theme.select; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
+        }
+        MouseArea {
+            id: la
+            anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+            onClicked: Qt.openUrlExternally(parent.url)
+        }
     }
 
     // A labelled volume slider row (dimmed/disabled when its source is off).

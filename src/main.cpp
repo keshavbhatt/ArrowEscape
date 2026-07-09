@@ -54,6 +54,8 @@ int main(int argc, char *argv[])
                     }
                     if (!qEnvironmentVariableIsEmpty("AE_OPENSETTINGS"))
                         w->setProperty("settingsOpen", true);
+                    if (!qEnvironmentVariableIsEmpty("AE_OPENABOUT"))
+                        w->setProperty("aboutOpen", true);
                     QTimer::singleShot(900, [w, shot, &app] {
                         w->grabWindow().save(QString::fromUtf8(shot));
                         app.quit();
