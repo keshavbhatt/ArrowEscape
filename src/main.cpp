@@ -52,6 +52,8 @@ int main(int argc, char *argv[])
                         if (auto *b = w->findChild<ArrowBoard *>())
                             b->startLevel(startLevel);
                     }
+                    if (!qEnvironmentVariableIsEmpty("AE_OPENSETTINGS"))
+                        w->setProperty("settingsOpen", true);
                     QTimer::singleShot(900, [w, shot, &app] {
                         w->grabWindow().save(QString::fromUtf8(shot));
                         app.quit();

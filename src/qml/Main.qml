@@ -20,6 +20,8 @@ ApplicationWindow {
 
     property bool soundOn: true
     property bool musicOn: true
+    property real soundVolume: 0.6
+    property real musicVolume: 0.5
     property bool settingsOpen: false
     property int  screen: 0            // 0 = level select, 1 = play
     property int  highestUnlocked: 1
@@ -30,6 +32,8 @@ ApplicationWindow {
         property alias highestUnlocked: win.highestUnlocked
         property alias soundOn: win.soundOn
         property alias musicOn: win.musicOn
+        property alias soundVolume: win.soundVolume
+        property alias musicVolume: win.musicVolume
         property alias dark: themeProxy.dark
     }
     QtObject { id: themeProxy; property bool dark: false; onDarkChanged: Theme.dark = dark }
@@ -43,16 +47,18 @@ ApplicationWindow {
       :                     qsTr("Master")
 
     // ── Sound + progress ──────────────────────────────────────────────────────
-    SoundEffect { id: sfxWhoosh; source: "qrc:/assets/sounds/whoosh.wav";  volume: 0.6 }
-    SoundEffect { id: sfxBlock;  source: "qrc:/assets/sounds/blocked.wav"; volume: 0.5 }
-    SoundEffect { id: sfxWin;    source: "qrc:/assets/sounds/win.wav";     volume: 0.7 }
+    SoundEffect { id: sfxWhoosh; source: "qrc:/assets/sounds/whoosh.wav";  volume: win.soundVolume }
+    SoundEffect { id: sfxBlock;  source: "qrc:/assets/sounds/blocked.wav"; volume: win.soundVolume * 0.85 }
+    SoundEffect { id: sfxWin;    source: "qrc:/assets/sounds/win.wav";     volume: win.soundVolume }
 
-    // Soft looping piano background music.
-    MediaPlayer {
+    // Soft looping piano background music. A looping SoundEffect (not MediaPlayer)
+    // keeps audio on the lightweight QAudioSink path — no ffmpeg/gstreamer media
+    // backend, which keeps the snap small and confinement simple.
+    SoundEffect {
         id: music
         source: "qrc:/assets/sounds/music.wav"
-        loops: MediaPlayer.Infinite
-        audioOutput: AudioOutput { volume: 0.5 }
+        loops: SoundEffect.Infinite
+        volume: win.musicVolume
     }
     onMusicOnChanged: musicOn ? music.play() : music.stop()
     Connections {
@@ -293,9 +299,13 @@ ApplicationWindow {
                     IconButton { anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
                                  icon: "close"; onClicked: win.settingsOpen = false }
                 }
-                ToggleRow { label: qsTr("Music");     checked: win.musicOn; onToggled: win.musicOn = !win.musicOn }
-                ToggleRow { label: qsTr("Sound");     checked: win.soundOn; onToggled: win.soundOn = !win.soundOn }
-                ToggleRow { label: qsTr("Dark mode"); checked: Theme.dark;  onToggled: Theme.dark = !Theme.dark }
+                ToggleRow { label: qsTr("Music"); checked: win.musicOn; onToggled: win.musicOn = !win.musicOn }
+                SliderRow { label: qsTr("Music volume"); on: win.musicOn; value: win.musicVolume
+                            onMoved: (v) => win.musicVolume = v }
+                ToggleRow { label: qsTr("Sound"); checked: win.soundOn; onToggled: win.soundOn = !win.soundOn }
+                SliderRow { label: qsTr("Sound volume"); on: win.soundOn; value: win.soundVolume
+                            onMoved: (v) => win.soundVolume = v }
+                ToggleRow { label: qsTr("Dark mode"); checked: Theme.dark; onToggled: Theme.dark = !Theme.dark }
             }
         }
     }
@@ -318,6 +328,46 @@ ApplicationWindow {
         }
         MouseArea { id: tma; anchors.fill: parent; hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor; onClicked: parent.clicked() }
+    }
+
+    // A labelled volume slider row (dimmed/disabled when its source is off).
+    component SliderRow: Item {
+        property string label: ""
+        property real value: 0.5
+        property bool on: true
+        signal moved(real v)
+        width: parent ? parent.width : 200
+        height: 44
+        opacity: on ? 1.0 : 0.4
+        Text {
+            anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
+            text: label; color: Theme.textDim; font.pixelSize: 15
+        }
+        Slider {
+            id: sld
+            anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+            width: 160; from: 0; to: 1
+            enabled: parent.on
+            value: parent.value
+            onMoved: parent.moved(value)
+
+            background: Rectangle {
+                x: sld.leftPadding; y: sld.topPadding + sld.availableHeight / 2 - height / 2
+                width: sld.availableWidth; height: 5; radius: 3
+                color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.20)
+                Rectangle {
+                    width: sld.visualPosition * parent.width; height: parent.height
+                    radius: parent.radius; color: Theme.drop
+                }
+            }
+            handle: Rectangle {
+                x: sld.leftPadding + sld.visualPosition * (sld.availableWidth - width)
+                y: sld.topPadding + sld.availableHeight / 2 - height / 2
+                width: 18; height: 18; radius: 9
+                color: Theme.surface
+                border.width: 1; border.color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.3)
+            }
+        }
     }
 
     // A labelled on/off toggle row.

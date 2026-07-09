@@ -115,5 +115,10 @@ install(TARGETS arrowescape RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES packaging/${AE_APP_ID}.desktop
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
 
+# AppStream metainfo — snapcraft's parse-info pulls the summary/description/
+# licence from here so they need not be repeated in snapcraft.yaml.
+install(FILES packaging/${AE_APP_ID}.metainfo.xml
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/metainfo)
+
 install(FILES assets/icons/${AE_APP_ID}.svg
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps)
