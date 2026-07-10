@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 import QtCore
 import QtMultimedia
 import ArrowEscape
@@ -36,6 +37,7 @@ ApplicationWindow {
     readonly property bool proEffective: LicenseController.pro
     property bool upgradeOpen: false
     property string upgradeFeature: qsTr("ArrowEscape Pro")
+    readonly property string donateUrl: "https://www.paypal.me/keshavnrj/9"
 
     Connections {
         target: LicenseController
@@ -72,7 +74,7 @@ ApplicationWindow {
     QtObject { id: themeProxy; property bool dark: false; onDarkChanged: Theme.dark = dark }
     Component.onCompleted: {
         Theme.dark = themeProxy.dark;
-        if (win.musicOn) music.play();
+        win.syncMusic();
         // Dev hook: force a licence tier (AE_TIER=free|trial|pro, debug builds).
         if (typeof aeTier !== "undefined" && aeTier && aeTier.length && LicenseController.debugSetTier)
             LicenseController.debugSetTier(aeTier);
@@ -114,7 +116,16 @@ ApplicationWindow {
         loops: SoundEffect.Infinite
         volume: win.musicVolume
     }
-    onMusicOnChanged: musicOn ? music.play() : music.stop()
+    // Play the loop only while enabled AND the window is on screen — pause it when
+    // the app is minimized or hidden, resume when it comes back.
+    function syncMusic() {
+        if (win.musicOn && win.visibility !== Window.Minimized && win.visibility !== Window.Hidden)
+            music.play();
+        else
+            music.stop();
+    }
+    onMusicOnChanged: syncMusic()
+    onVisibilityChanged: syncMusic()
     Connections {
         target: game
         function onEscaped(id) { if (win.soundOn) sfxWhoosh.play(); }
@@ -402,6 +413,9 @@ ApplicationWindow {
             anchors.centerIn: parent
             width: 320; radius: Theme.rlg; color: Theme.surface
             implicitHeight: scol.implicitHeight + 40
+            transformOrigin: Item.Center
+            scale: win.settingsOpen ? 1.0 : 0.90
+            Behavior on scale { NumberAnimation { duration: 240; easing.type: Easing.OutBack } }
             MouseArea { anchors.fill: parent }
             Column {
                 id: scol
@@ -461,7 +475,15 @@ ApplicationWindow {
                     fill: Theme.good
                     onClicked: { win.settingsOpen = false; win.requestUpgrade(qsTr("ArrowEscape Pro")); }
                 }
-                Item { width: 1; height: LicenseController.hasPaidAccess ? 0 : 6 }
+                // Paid users get an Account entry to the same dialog (id / manage / donate).
+                PillButton {
+                    width: parent.width
+                    visible: LicenseController.hasPaidAccess
+                    text: qsTr("Account")
+                    fill: Qt.rgba(Theme.title.r, Theme.title.g, Theme.title.b, 0.15); ink: Theme.title
+                    onClicked: { win.settingsOpen = false; win.requestUpgrade(qsTr("ArrowEscape Pro")); }
+                }
+                Item { width: 1; height: 6 }
                 PillButton {
                     width: parent.width
                     text: qsTr("About")
@@ -484,6 +506,9 @@ ApplicationWindow {
             anchors.centerIn: parent
             width: 340; radius: Theme.rlg; color: Theme.surface
             implicitHeight: acol.implicitHeight + 36
+            transformOrigin: Item.Center
+            scale: win.aboutOpen ? 1.0 : 0.90
+            Behavior on scale { NumberAnimation { duration: 240; easing.type: Easing.OutBack } }
             MouseArea { anchors.fill: parent }
             Column {
                 id: acol
@@ -576,10 +601,18 @@ ApplicationWindow {
         Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
         MouseArea { anchors.fill: parent; onClicked: win.upgradeOpen = false }
         Rectangle {
+            id: ucard
             anchors.centerIn: parent
             width: 330; radius: Theme.rlg; color: Theme.surface
             implicitHeight: ucol.implicitHeight + 40
+            transformOrigin: Item.Center
+            scale: win.upgradeOpen ? 1.0 : 0.90
+            Behavior on scale { NumberAnimation { duration: 240; easing.type: Easing.OutBack } }
             MouseArea { anchors.fill: parent }
+
+            readonly property string tier: LicenseController.tier
+            readonly property bool isPro: tier === "pro"
+
             Column {
                 id: ucol
                 anchors.centerIn: parent
@@ -594,13 +627,26 @@ ApplicationWindow {
                     anchors.horizontalCenter: parent.horizontalCenter
                     width: 66; height: 66; radius: 18
                     color: Qt.rgba(Theme.title.r, Theme.title.g, Theme.title.b, 0.16)
-                    Text { anchors.centerIn: parent; text: "★"; font.pixelSize: 34; color: Theme.title }
+                    Icon { anchors.centerIn: parent
+                           name: ucard.isPro ? "crown" : "check"; visible: ucard.isPro
+                           size: 34; color: Theme.title }
+                    Text { anchors.centerIn: parent; visible: !ucard.isPro
+                           text: "★"; font.pixelSize: 34; color: Theme.title }
                 }
                 Text { anchors.horizontalCenter: parent.horizontalCenter
                        text: qsTr("ArrowEscape Pro"); color: Theme.text
                        font.pixelSize: 22; font.weight: Font.Bold }
+
+                // Current-plan pill.
+                ProBadge {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    label: ucard.isPro ? qsTr("Pro") : ucard.tier === "trial" ? qsTr("Pro trial") : qsTr("Free")
+                }
+
                 Text { width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
-                       text: qsTr("Unlock %1 and everything below — one purchase, yours forever.").arg(win.upgradeFeature)
+                       text: ucard.isPro
+                             ? qsTr("You have full access — thank you for supporting ArrowEscape.")
+                             : qsTr("Unlock %1 and everything below — one purchase, yours forever.").arg(win.upgradeFeature)
                        color: Theme.textDim; font.pixelSize: 13 }
                 Column {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -619,15 +665,68 @@ ApplicationWindow {
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    visible: LicenseController.tier === "trial"
+                    visible: ucard.tier === "trial"
                     text: qsTr("Trial — %1 days left").arg(LicenseController.evaluationDaysRemaining)
                     color: Theme.title; font.pixelSize: 12; font.weight: Font.DemiBold
                 }
+
+                Divider {}
+
+                // ── Account row: id + copy + refresh ──
+                Item {
+                    width: parent.width; height: 34
+                    Text {
+                        id: acctLbl
+                        anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
+                        text: qsTr("Account"); color: Theme.textDim; font.pixelSize: 12
+                    }
+                    Text {
+                        anchors.left: acctLbl.right; anchors.leftMargin: 10
+                        anchors.right: acctActions.left; anchors.rightMargin: 8
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: LicenseController.accountId || qsTr("—")
+                        color: Theme.text; font.pixelSize: 12; font.family: "monospace"
+                        elide: Text.ElideMiddle
+                    }
+                    Row {
+                        id: acctActions
+                        anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+                        // Copy account id.
+                        IconButton {
+                            iconSize: 16; icon: copyTimer.done ? "check" : "copy"
+                            color: copyTimer.done ? Theme.good : Theme.textDim
+                            enabled: LicenseController.accountId.length > 0
+                            onClicked: { clipField.selectAll(); clipField.copy();
+                                         clipField.deselect(); copyTimer.done = true; copyTimer.restart(); }
+                        }
+                        // Refresh licence status (spins while checking).
+                        IconButton {
+                            iconSize: 16; icon: "restart"; color: Theme.textDim
+                            enabled: !LicenseController.checking
+                            onClicked: LicenseController.refresh()
+                            RotationAnimation on rotation {
+                                running: LicenseController.checking
+                                from: 0; to: 360; duration: 900; loops: Animation.Infinite
+                            }
+                            onEnabledChanged: if (enabled) rotation = 0
+                        }
+                    }
+                    TextEdit { id: clipField; visible: false; text: LicenseController.accountId }
+                    Timer { id: copyTimer; interval: 1400; property bool done: false; onTriggered: done = false }
+                }
+
+                // ── Actions: Upgrade (non-Pro) or Donate (Pro), + Manage ──
                 PillButton { anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
+                             visible: !ucard.isPro
                              text: qsTr("Upgrade"); fill: Theme.good
                              onClicked: { LicenseController.openCheckout(); win.upgradeOpen = false } }
                 PillButton { anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
-                             text: qsTr("Restore / Manage")
+                             visible: ucard.isPro
+                             text: qsTr("♥  Donate"); fill: Theme.heart
+                             onClicked: Qt.openUrlExternally(win.donateUrl) }
+                PillButton { anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
+                             text: ucard.isPro ? qsTr("Manage account") : qsTr("Restore / Manage")
                              fill: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.14); ink: Theme.text
                              onClicked: LicenseController.openPortal() }
             }
