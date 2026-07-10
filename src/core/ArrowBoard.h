@@ -77,6 +77,9 @@ public:
     Q_INVOKABLE void tap(int id);            // launch a snake (or bounce if blocked)
     Q_INVOKABLE void finishEscape(int id);   // QML calls this when the fly-off ends
     Q_INVOKABLE int  hint() const;           // id of a snake that can launch now, or -1
+#ifdef AE_DEBUG
+    Q_INVOKABLE int  debugBlockedId() const; // id of a snake whose lane is blocked, or -1
+#endif
 
 signals:
     void boardChanged();

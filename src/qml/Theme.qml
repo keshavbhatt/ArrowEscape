@@ -23,7 +23,7 @@ QtObject {
     readonly property color drop:     "#5bb3ea"   // progress bar / sliders
     readonly property color heart:    dark ? "#f0687e" : "#e0556b"   // lives
     readonly property color good:     "#57b98a"
-    readonly property color blockRed: "#c0563a"   // blocked-tap flash
+    readonly property color blockRed: dark ? "#f0685a" : "#d8382a"   // blocked-tap flash
 
     // Faint dot marking each empty grid cell (shows through where arrows cleared).
     readonly property color dot:     dark ? Qt.rgba(0.85, 0.78, 0.62, 0.20)

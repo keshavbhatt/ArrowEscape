@@ -264,11 +264,15 @@ Item {
         fly.start();
     }
 
-    // Blocked tap: red flash + small shake.
+    // Blocked tap: the whole arrow flashes red (double pulse, held long enough to
+    // read as "this one can't leave yet") plus a small shake.
     SequentialAnimation {
         id: redFlash
-        NumberAnimation { target: snake; property: "redAmt"; to: 1; duration: 70 }
-        NumberAnimation { target: snake; property: "redAmt"; to: 0; duration: 320 }
+        NumberAnimation { target: snake; property: "redAmt"; to: 1;    duration: 60 }
+        NumberAnimation { target: snake; property: "redAmt"; to: 0.45; duration: 130 }
+        NumberAnimation { target: snake; property: "redAmt"; to: 1;    duration: 110 }
+        PauseAnimation  { duration: 90 }
+        NumberAnimation { target: snake; property: "redAmt"; to: 0;    duration: 420; easing.type: Easing.InQuad }
     }
     property real _shakeX: 0
     SequentialAnimation {

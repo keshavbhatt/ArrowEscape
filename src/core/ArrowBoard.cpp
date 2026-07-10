@@ -413,6 +413,16 @@ int ArrowBoard::hint() const
     return -1;
 }
 
+#ifdef AE_DEBUG
+int ArrowBoard::debugBlockedId() const
+{
+    for (int i = 0; i < m_arrows.size(); ++i)
+        if (!m_arrows.at(i).escaping && !laneClear(i))
+            return m_arrows.at(i).id;
+    return -1;
+}
+#endif
+
 void ArrowBoard::setStatus(Status s)
 {
     if (m_status == s)

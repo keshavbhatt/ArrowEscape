@@ -141,6 +141,38 @@ int main(int argc, char *argv[])
             }, Qt::QueuedConnection);
     }
 
+    // Dev-only: AE_BLOCKTAP=<dir> taps an arrow whose lane is NOT clear, capturing
+    // the blocked-tap red flash + shake and the heart-loss animation together in a
+    // burst of frames. Inert unless set.
+    const QByteArray blockDir = qgetenv("AE_BLOCKTAP");
+    if (!blockDir.isEmpty()) {
+        QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app,
+            [blockDir, startLevel, &app](QObject *obj, const QUrl &) {
+                auto *w = qobject_cast<QQuickWindow *>(obj);
+                if (!w) return;
+                auto *board = w->findChild<ArrowBoard *>();
+                if (!board) { app.quit(); return; }
+                w->setProperty("screen", 1);
+                if (startLevel > 0) board->startLevel(startLevel);
+                int *frame = new int(0);
+                auto grab = [w, blockDir, frame]() {
+                    w->grabWindow().save(QString::fromUtf8(blockDir)
+                        + QString("/b%1.png").arg(*frame, 3, 10, QChar('0')));
+                    ++(*frame);
+                };
+                QTimer::singleShot(700, &app, [board, grab, &app]() {
+                    grab();                                   // before
+                    // Tap a genuinely blocked arrow so it bounces (red flash + one
+                    // heart lost) instead of launching.
+                    const int target = board->debugBlockedId();
+                    if (target > 0) board->tap(target);
+                    for (int t = 1; t <= 20; ++t)
+                        QTimer::singleShot(t * 33, &app, grab);   // during the flash
+                    QTimer::singleShot(900, &app, [&app] { app.quit(); });
+                });
+            }, Qt::QueuedConnection);
+    }
+
     // Dev-only: AE_INTRO=<dir> grabs a burst of frames right at load to capture
     // the board entrance animation. Inert unless set.
     const QByteArray introDir = qgetenv("AE_INTRO");
