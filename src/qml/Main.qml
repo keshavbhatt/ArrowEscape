@@ -17,6 +17,7 @@ ApplicationWindow {
     color: Theme.bg
 
     ArrowBoard { id: game }
+    PictureCatalog { id: catalog }
 
     property bool soundOn: true
     property bool musicOn: true
@@ -24,8 +25,13 @@ ApplicationWindow {
     property real musicVolume: 0.5
     property bool settingsOpen: false
     property bool aboutOpen: false
-    property int  screen: 0            // 0 = level select, 1 = play
+    property int  screen: 0            // 0 = level select, 1 = play, 2 = collections
+    property int  returnScreen: 0      // where the game's back arrow returns to
     property int  highestUnlocked: 1
+    property string currentPictureId: ""     // set while playing a Picture Pack board
+    property string currentPictureName: ""
+    property bool pro: false                 // Pro unlock (stub; wired to licensing later)
+    readonly property bool proEffective: pro || appDebug
 
     // Persisted progress + preferences.
     Settings {
@@ -35,10 +41,28 @@ ApplicationWindow {
         property alias musicOn: win.musicOn
         property alias soundVolume: win.soundVolume
         property alias musicVolume: win.musicVolume
+        property alias pro: win.pro
         property alias dark: themeProxy.dark
     }
     QtObject { id: themeProxy; property bool dark: false; onDarkChanged: Theme.dark = dark }
-    Component.onCompleted: { Theme.dark = themeProxy.dark; if (win.musicOn) music.play(); }
+    Component.onCompleted: {
+        Theme.dark = themeProxy.dark;
+        if (win.musicOn) music.play();
+        // Dev hook: jump straight into a Picture Pack board by id (AE_PIC).
+        if (typeof aePic !== "undefined" && aePic && aePic.length) {
+            for (var i = 0; i < catalog.packs.length; ++i) {
+                var pics = catalog.packs[i].pictures;
+                for (var j = 0; j < pics.length; ++j)
+                    if (pics[j].id === aePic) {
+                        win.currentPictureId = pics[j].id;
+                        win.currentPictureName = pics[j].name;
+                        game.startPicture(pics[j].cols, pics[j].rows, pics[j].mask.join("\n"), pics[j].seed);
+                        win.returnScreen = 2; win.screen = 1;
+                        return;
+                    }
+            }
+        }
+    }
 
     readonly property string difficulty:
         game.level <= 10  ? qsTr("Easy")
@@ -68,17 +92,41 @@ ApplicationWindow {
         function onBlocked(id) { if (win.soundOn) sfxBlock.play(); }
         function onWon() {
             if (win.soundOn) sfxWin.play();
-            win.highestUnlocked = Math.max(win.highestUnlocked, game.level + 1);
+            if (game.pictureMode)
+                catalog.markCompleted(win.currentPictureId);
+            else
+                win.highestUnlocked = Math.max(win.highestUnlocked, game.level + 1);
         }
     }
 
     // ── Level-select screen ───────────────────────────────────────────────────────
-    LevelSelect {
+    // ── Home: Levels + Picture Pack collections ──
+    HomeScreen {
         anchors.fill: parent
         visible: win.screen === 0
+        catalog: catalog
+        pro: win.proEffective
+        levelToContinue: win.highestUnlocked
+        onOpenLevels: win.screen = 2
+        onOpenSettings: win.settingsOpen = true
+        onToggleTheme: Theme.dark = !Theme.dark
+        onPlay: (pic, packId) => {
+            win.currentPictureId = pic.id;
+            win.currentPictureName = pic.name;
+            win.returnScreen = 0;
+            game.startPicture(pic.cols, pic.rows, pic.mask.join("\n"), pic.seed);
+            win.screen = 1;
+        }
+    }
+
+    // ── Levels (the number ladder, reached from the Home "Levels" card) ──
+    LevelSelect {
+        anchors.fill: parent
+        visible: win.screen === 2
         highestUnlocked: win.highestUnlocked
         unlockAll: appDebug            // debug builds: every level is playable
-        onPlay: (lvl) => { game.startLevel(lvl); win.screen = 1; }
+        onBack: win.screen = 0
+        onPlay: (lvl) => { win.returnScreen = 2; game.startLevel(lvl); win.screen = 1; }
         onOpenSettings: win.settingsOpen = true
         onToggleTheme: Theme.dark = !Theme.dark
     }
@@ -108,16 +156,17 @@ ApplicationWindow {
                     anchors.leftMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
                     icon: "back"
-                    onClicked: win.screen = 0
+                    onClicked: win.screen = win.returnScreen
                 }
                 Column {
                     anchors.centerIn: parent
                     spacing: 0
                     Text { anchors.horizontalCenter: parent.horizontalCenter
-                           text: qsTr("Level %1").arg(game.level)
+                           text: game.pictureMode ? win.currentPictureName : qsTr("Level %1").arg(game.level)
                            color: Theme.title; font.pixelSize: 24; font.weight: Font.Bold }
                     Text { anchors.horizontalCenter: parent.horizontalCenter
-                           text: win.difficulty; color: "#8a63c0"; font.pixelSize: 13; font.weight: Font.DemiBold }
+                           text: game.pictureMode ? qsTr("Picture") : win.difficulty
+                           color: "#8a63c0"; font.pixelSize: 13; font.weight: Font.DemiBold }
                 }
                 IconButton {
                     anchors.right: gearBtn.left
@@ -228,16 +277,19 @@ ApplicationWindow {
             anchors.centerIn: parent
             spacing: 20
             Text { anchors.horizontalCenter: parent.horizontalCenter
-                   text: qsTr("Cleared!"); color: Theme.title; font.pixelSize: 40; font.weight: Font.Bold }
+                   text: game.pictureMode ? qsTr("Picture complete!") : qsTr("Cleared!")
+                   color: Theme.title; font.pixelSize: 40; font.weight: Font.Bold }
             Text { anchors.horizontalCenter: parent.horizontalCenter
-                   text: qsTr("The page is calm again."); color: Theme.text; font.pixelSize: 15 }
+                   text: game.pictureMode ? qsTr("Added to your collection.") : qsTr("The page is calm again.")
+                   color: Theme.text; font.pixelSize: 15 }
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 12
-                PillButton { text: qsTr("Levels")
+                PillButton { text: game.pictureMode ? qsTr("Collections") : qsTr("Levels")
                              fill: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.14); ink: Theme.text
-                             onClicked: win.screen = 0 }
-                PillButton { text: qsTr("Next level"); fill: Theme.good; onClicked: game.nextLevel() }
+                             onClicked: win.screen = win.returnScreen }
+                PillButton { visible: !game.pictureMode
+                             text: qsTr("Next level"); fill: Theme.good; onClicked: game.nextLevel() }
             }
         }
     }
@@ -269,8 +321,9 @@ ApplicationWindow {
                 PillButton { anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
                              text: qsTr("Free Lives"); fill: "#c98a3c"; onClicked: game.addLives() }
                 PillButton { anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
-                             text: qsTr("Levels"); fill: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.14)
-                             ink: Theme.text; onClicked: { game.restart(); win.screen = 0 } }
+                             text: game.pictureMode ? qsTr("Collections") : qsTr("Levels")
+                             fill: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.14)
+                             ink: Theme.text; onClicked: { game.restart(); win.screen = win.returnScreen } }
             }
         }
     }

@@ -27,3 +27,10 @@ moc_*.h
 
 # OS
 .DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Harness temp
+*.tmp.*

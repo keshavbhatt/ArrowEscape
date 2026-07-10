@@ -139,7 +139,9 @@ void ArrowBoard::generate(int rows, int cols, int lenMin, int lenMax, int longBi
     QRandomGenerator seeded(quint32(m_level) * 2654435761u + 101u);
     QRandomGenerator *rng = &seeded;
 
-    QVector<char> present(rows * cols, 1);
+    // Fill the whole rectangle, or only the mask cells for a picture board.
+    QVector<char> present = (m_mask.size() == rows * cols) ? m_mask
+                                                           : QVector<char>(rows * cols, 1);
     auto at = [&](int c, int r) { return present[r * cols + c] != 0; };
     auto P  = [&](int c, int r) { return c >= 0 && c < cols && r >= 0 && r < rows && at(c, r); };
 
@@ -288,6 +290,8 @@ void ArrowBoard::generate(int rows, int cols, int lenMin, int lenMax, int longBi
 void ArrowBoard::startLevel(int level)
 {
     m_level = std::max(1, level);
+    m_mask.clear();            // normal levels fill the whole rectangle
+    m_pictureMode = false;
 
     // Difficulty ramps with the level up to a hard plateau reached ~level 200:
     // the grid grows, snakes get longer, and arrows point less toward their
@@ -311,6 +315,26 @@ void ArrowBoard::startLevel(int level)
 void ArrowBoard::nextLevel()
 {
     startLevel(m_level + 1);
+}
+
+void ArrowBoard::startPicture(int cols, int rows, const QString &maskRows, int seed)
+{
+    const QStringList lines = maskRows.split('\n', Qt::SkipEmptyParts);
+    m_mask = QVector<char>(rows * cols, 0);
+    for (int r = 0; r < rows && r < lines.size(); ++r) {
+        const QString &ln = lines.at(r);
+        for (int c = 0; c < cols && c < ln.size(); ++c) {
+            const QChar ch = ln.at(c);
+            m_mask[r * cols + c] = (ch == '#' || ch == '1') ? 1 : 0;
+        }
+    }
+    m_pictureMode = true;
+    m_level = std::max(1, seed);             // seeds the RNG → deterministic per picture
+
+    // Picture boards are a fixed size (the shape); moderate snakes, strong
+    // long-lane bias for a tangled look.
+    generate(rows, cols, 3, 8, 70);
+    emit levelChanged();
 }
 
 void ArrowBoard::restart()

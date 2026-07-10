@@ -48,6 +48,8 @@ set(AE_QML_FILES
     Board.qml
     ArrowSnake.qml
     LevelSelect.qml
+    HomeScreen.qml
+    components/PicturePreview.qml
     components/Drops.qml
     components/Icon.qml
     components/IconButton.qml
@@ -70,12 +72,18 @@ qt_add_qml_module(arrowescape
     VERSION 1.0
     QML_FILES ${AE_QML_PATHS}
     SOURCES
-        src/core/ArrowBoard.h  src/core/ArrowBoard.cpp
+        src/core/ArrowBoard.h      src/core/ArrowBoard.cpp
+        src/core/PictureCatalog.h  src/core/PictureCatalog.cpp
 )
 
 # ── Bundled assets: app icon + sound effects ──────────────────────────────────
 file(GLOB_RECURSE AE_SOUND_FILES CONFIGURE_DEPENDS
      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} assets/sounds/*.wav)
+
+# Picture Pack definitions (Collections). Dropping a new pack JSON in and
+# rebuilding is all it takes — PictureCatalog scans them at runtime.
+file(GLOB AE_PICTURE_FILES CONFIGURE_DEPENDS
+     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} data/pictures/*.json)
 
 qt_add_resources(arrowescape "appdata"
     PREFIX "/"
@@ -83,6 +91,7 @@ qt_add_resources(arrowescape "appdata"
     FILES
         assets/icons/${AE_APP_ID}.svg
         ${AE_SOUND_FILES}
+        ${AE_PICTURE_FILES}
 )
 
 target_include_directories(arrowescape PRIVATE

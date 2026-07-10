@@ -34,6 +34,8 @@ int main(int argc, char *argv[])
 #else
     engine.rootContext()->setContextProperty("appDebug", false);
 #endif
+    // Dev-only: AE_PIC=<pictureId> auto-plays that Picture Pack board on launch.
+    engine.rootContext()->setContextProperty("aePic", QString::fromUtf8(qgetenv("AE_PIC")));
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
@@ -56,6 +58,8 @@ int main(int argc, char *argv[])
                         w->setProperty("settingsOpen", true);
                     if (!qEnvironmentVariableIsEmpty("AE_OPENABOUT"))
                         w->setProperty("aboutOpen", true);
+                    if (!qEnvironmentVariableIsEmpty("AE_ALBUM"))
+                        w->setProperty("screen", 2);
                     QTimer::singleShot(900, [w, shot, &app] {
                         w->grabWindow().save(QString::fromUtf8(shot));
                         app.quit();
@@ -153,6 +157,47 @@ int main(int argc, char *argv[])
                 for (int t = 0; t <= 18; ++t)
                     QTimer::singleShot(t * 55, &app, grab);
                 QTimer::singleShot(1150, &app, [&app] { app.quit(); });
+            }, Qt::QueuedConnection);
+    }
+
+    // Dev-only: AE_SHAPE=heart|star|moon generates a picture board and (with
+    // AE_SHOT set) screenshots it after the draw-in. Prototype for Picture Packs.
+    const QByteArray shape = qgetenv("AE_SHAPE");
+    if (!shape.isEmpty()) {
+        QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app,
+            [shape, &app](QObject *obj, const QUrl &) {
+                auto *w = qobject_cast<QQuickWindow *>(obj);
+                if (!w) return;
+                auto *b = w->findChild<ArrowBoard *>();
+                if (!b) { app.quit(); return; }
+                w->setProperty("screen", 1);
+                const QString name = QString::fromUtf8(shape);
+                int cols = 15, rows = 15;
+                QString mask;
+                if (name == "heart") {
+                    cols = 13; rows = 12;
+                    mask = "..##.....##..\n.#####.#####.\n#############\n#############\n"
+                           "#############\n#############\n#############\n#############\n"
+                           ".###########.\n..#########..\n..#########..\n....#####....";
+                } else if (name == "moon") {
+                    cols = 14; rows = 14;
+                    mask = ".....####.....\n...######.....\n..#####.......\n.#####........\n"
+                           ".####.........\n#####.........\n#####.........\n#####.........\n"
+                           "#####.........\n.####.........\n.#####........\n..#####.......\n"
+                           "...######.....\n.....####.....";
+                } else {
+                    mask = ".......#.......\n......###......\n......###......\n......###......\n"
+                           "...#..###..#...\n.#############.\n.#############.\n..###########..\n"
+                           ".....#####.....\n....#######....\n...#########...\n...####.####...\n"
+                           "...###...###...\n...............\n...............";
+                }
+                b->startPicture(cols, rows, mask, 7);
+                const QByteArray shot = qgetenv("AE_SHOT");
+                if (!shot.isEmpty())
+                    QTimer::singleShot(1600, &app, [w, shot, &app] {
+                        w->grabWindow().save(QString::fromUtf8(shot));
+                        app.quit();
+                    });
             }, Qt::QueuedConnection);
     }
 

@@ -77,6 +77,7 @@ Item {
         Canvas {
             id: dots
             anchors.fill: parent
+            visible: !(root.board && root.board.pictureMode)
             onPaint: {
                 const ctx = getContext("2d");
                 ctx.reset();

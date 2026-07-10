@@ -14,6 +14,7 @@ Item {
     property bool unlockAll: false     // debug: make every level tappable
     signal play(int level)
     signal openSettings()
+    signal back()
     signal toggleTheme()
 
     // ── Header ──
@@ -27,6 +28,12 @@ Item {
             color: Theme.title
             font.pixelSize: 24
             font.weight: Font.Bold
+        }
+        IconButton {
+            anchors.left: parent.left; anchors.leftMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            icon: "back"
+            onClicked: root.back()
         }
         IconButton {
             anchors.right: setBtn.left

@@ -32,6 +32,7 @@ class ArrowBoard : public QAbstractListModel
     Q_PROPERTY(int remaining  READ remaining  NOTIFY remainingChanged)
     Q_PROPERTY(qreal progress READ progress   NOTIFY remainingChanged)
     Q_PROPERTY(Status status  READ status     NOTIFY statusChanged)
+    Q_PROPERTY(bool pictureMode READ pictureMode NOTIFY boardChanged)
 
 public:
     enum Direction { Up = 0, Right = 1, Down = 2, Left = 3 };
@@ -63,10 +64,14 @@ public:
     int remaining() const;             // snakes not yet launching
     qreal progress() const;            // fraction of the level cleared, 0..1
     Status status() const { return m_status; }
+    bool pictureMode() const { return m_pictureMode; }
 
     // ── Actions driven from QML ──
     Q_INVOKABLE void startLevel(int level);
     Q_INVOKABLE void nextLevel();
+    // Generate a fully-packed, solvable board in the shape of `maskRows` (one
+    // string per row; '#'/'1' = a filled cell). Seeded by `seed` for determinism.
+    Q_INVOKABLE void startPicture(int cols, int rows, const QString &maskRows, int seed);
     Q_INVOKABLE void restart();
     Q_INVOKABLE void addLives();             // "Free Lives": refill drops, resume the board
     Q_INVOKABLE void tap(int id);            // launch a snake (or bounce if blocked)
@@ -105,6 +110,8 @@ private:
     QVector<Arrow>    m_arrows;
     QVector<Arrow>    m_initial;   // pristine snapshot for restart()
     QHash<int, int>   m_owner;     // cell key → index into m_arrows (non-escaping only)
+    QVector<char>     m_mask;      // per-cell fill mask (empty ⇒ full rectangle)
+    bool              m_pictureMode = false;
     int    m_rows = 0;
     int    m_cols = 0;
     int    m_level = 0;
