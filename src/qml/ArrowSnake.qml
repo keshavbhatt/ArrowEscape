@@ -24,6 +24,7 @@ Item {
     property int  gridRows: 1
     property var  board
     property int  hintId: -1
+    property bool colorful: false      // Pro: each snake gets its own colour
 
     readonly property bool hinted: hintId === arrowId
     readonly property real m: cellSize * 0.6
@@ -91,9 +92,10 @@ Item {
             ctx.reset();
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
-            var col = snake.hinted ? Theme.select : Theme.ink;
+            var col = snake.hinted ? Theme.select
+                    : (snake.colorful ? Theme.arrowColor(snake.arrowId) : Theme.ink);
             if (snake.redAmt > 0)
-                col = snake._lerp(Theme.ink, Theme.blockRed, snake.redAmt);
+                col = snake._lerp(col, Theme.blockRed, snake.redAmt);
             ctx.strokeStyle = col;
             const lw = cs * (snake.hinted ? 0.15 : 0.13);
             ctx.lineWidth = lw;
@@ -218,6 +220,7 @@ Item {
     }
 
     onHintedChanged:   canvas.requestPaint()
+    onColorfulChanged: canvas.requestPaint()
     onRedAmtChanged:   canvas.requestPaint()
     onLaunchArcChanged: canvas.requestPaint()
     onWidthChanged:    canvas.requestPaint()

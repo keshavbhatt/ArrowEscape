@@ -21,6 +21,7 @@ ApplicationWindow {
 
     property bool soundOn: true
     property bool musicOn: true
+    property bool colorArrows: false         // Pro feature
     property real soundVolume: 0.6
     property real musicVolume: 0.5
     property bool settingsOpen: false
@@ -41,6 +42,7 @@ ApplicationWindow {
         property alias musicOn: win.musicOn
         property alias soundVolume: win.soundVolume
         property alias musicVolume: win.musicVolume
+        property alias colorArrows: win.colorArrows
         property alias pro: win.pro
         property alias dark: themeProxy.dark
     }
@@ -250,6 +252,7 @@ ApplicationWindow {
         Board {
             id: boardView
             board: game
+            colorful: win.colorArrows && win.proEffective
             anchors { top: debugBar.bottom; left: parent.left; right: parent.right; bottom: toolbar.top; margins: 12 }
         }
 
@@ -360,6 +363,8 @@ ApplicationWindow {
                 SliderRow { label: qsTr("Sound volume"); on: win.soundOn; value: win.soundVolume
                             onMoved: (v) => win.soundVolume = v }
                 ToggleRow { label: qsTr("Dark mode"); checked: Theme.dark; onToggled: Theme.dark = !Theme.dark }
+                ToggleRow { label: qsTr("Colorful arrows"); checked: win.colorArrows
+                            locked: !win.proEffective; onToggled: win.colorArrows = !win.colorArrows }
                 Item { width: 1; height: 6 }
                 PillButton {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -526,27 +531,42 @@ ApplicationWindow {
         }
     }
 
-    // A labelled on/off toggle row.
+    // A labelled on/off toggle row. `locked` dims it, shows a PRO badge and
+    // blocks toggling (for Pro-only settings).
     component ToggleRow: Item {
         property string label: ""
         property bool checked: false
+        property bool locked: false
         signal toggled
         width: parent ? parent.width : 200
         height: 48
+        opacity: locked ? 0.55 : 1
         Text { anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
                text: label; color: Theme.text; font.pixelSize: 16 }
-        Rectangle {
+        Row {
             anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-            width: 48; height: 28; radius: 14
-            color: checked ? Theme.good : Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.22)
-            Behavior on color { ColorAnimation { duration: 160 } }
+            spacing: 8
             Rectangle {
-                width: 22; height: 22; radius: 11; color: "white"; y: 3
-                x: parent.parent.checked ? parent.width - width - 3 : 3
-                Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+                visible: locked
+                anchors.verticalCenter: parent.verticalCenter
+                radius: height / 2; color: Qt.rgba(Theme.title.r, Theme.title.g, Theme.title.b, 0.16)
+                width: pl.implicitWidth + 14; height: 18
+                Text { id: pl; anchors.centerIn: parent; text: qsTr("PRO")
+                       color: Theme.title; font.pixelSize: 10; font.weight: Font.Bold }
             }
-            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                        onClicked: parent.parent.toggled() }
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                width: 48; height: 28; radius: 14
+                color: checked ? Theme.good : Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.22)
+                Behavior on color { ColorAnimation { duration: 160 } }
+                Rectangle {
+                    width: 22; height: 22; radius: 11; color: "white"; y: 3
+                    x: checked ? parent.width - width - 3 : 3
+                    Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+                }
+                MouseArea { anchors.fill: parent; enabled: !locked
+                            cursorShape: Qt.PointingHandCursor; onClicked: toggled() }
+            }
         }
     }
 }

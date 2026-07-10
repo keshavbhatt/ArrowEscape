@@ -9,6 +9,7 @@ Item {
 
     property var board
     property int hintId: -1
+    property bool colorful: false      // Pro: colour each snake
     property real baseCell: 42
 
     clip: true
@@ -103,6 +104,7 @@ Item {
                 gridRows: root.rows
                 board: root.board
                 hintId: root.hintId
+                colorful: root.colorful
                 onTapped: (id) => root.board.tap(id)
             }
         }

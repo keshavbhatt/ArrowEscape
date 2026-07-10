@@ -28,6 +28,16 @@ QtObject {
     readonly property color dot:     dark ? Qt.rgba(0.85, 0.78, 0.62, 0.20)
                                           : Qt.rgba(0.50, 0.40, 0.26, 0.30)
 
+    // Per-snake colours for the optional (Pro) "Colorful arrows" mode. Two
+    // variants so they stay legible on both the cream and the dark parchment.
+    readonly property var arrowPalette: dark
+        ? ["#ef7a5f", "#45c7b4", "#7b93ea", "#e6b452", "#a97be0", "#7bc267", "#e87ba6", "#5cb8e8"]
+        : ["#c9573b", "#2b9a8a", "#4666c4", "#bd8526", "#8f5bbf", "#529c40", "#cc567f", "#2f96cf"]
+    function arrowColor(i) {
+        var p = arrowPalette;
+        return p[((i % p.length) + p.length) % p.length];
+    }
+
     // ── Text ──
     readonly property color title:   dark ? "#d9a24e" : "#a9772e"
     readonly property color text:    dark ? "#e7dcc6" : "#6f5a3a"
