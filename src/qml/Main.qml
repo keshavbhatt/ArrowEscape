@@ -51,6 +51,16 @@ ApplicationWindow {
     }
     function requestUpgrade(feature) { win.upgradeFeature = feature; win.upgradeOpen = true; }
 
+    // ── Page slide navigation ──
+    // Order the screens left→right by "depth" (home < levels < game) so a page
+    // always slides in from the correct side no matter its numeric id: the current
+    // page sits at x=0, shallower pages park off the left, deeper ones off the right.
+    function pageDepth(s) { return s === 0 ? 0 : (s === 2 ? 1 : 2); }
+    function pageX(id) {
+        if (id === win.screen) return 0;
+        return win.pageDepth(id) < win.pageDepth(win.screen) ? -win.width : win.width;
+    }
+
     // Colourful arrows is Pro-only and on by default. Once the licence has
     // definitively resolved to free (trial ended / never Pro), switch it off.
     // Guard on !checking so the async resolution doesn't clear it for a real
@@ -116,16 +126,22 @@ ApplicationWindow {
         loops: SoundEffect.Infinite
         volume: win.musicVolume
     }
-    // Play the loop only while enabled AND the window is on screen — pause it when
-    // the app is minimized or hidden, resume when it comes back.
+    // Play the loop only while enabled AND the app is in the foreground — pause it
+    // when minimized, hidden, or sent to the background; resume when it returns.
+    // We check both `visibility` and `active`: some platforms (notably Wayland)
+    // don't report a Minimized visibility, but the window does lose `active`.
     function syncMusic() {
-        if (win.musicOn && win.visibility !== Window.Minimized && win.visibility !== Window.Hidden)
+        var foreground = win.active
+                      && win.visibility !== Window.Minimized
+                      && win.visibility !== Window.Hidden;
+        if (win.musicOn && foreground)
             music.play();
         else
             music.stop();
     }
     onMusicOnChanged: syncMusic()
     onVisibilityChanged: syncMusic()
+    onActiveChanged: syncMusic()
     Connections {
         target: game
         function onEscaped(id) { if (win.soundOn) sfxWhoosh.play(); }
@@ -140,11 +156,18 @@ ApplicationWindow {
         function onLevelChanged() { win.hintsLeft = 3; }   // fresh free hints per board
     }
 
-    // ── Level-select screen ───────────────────────────────────────────────────────
+    // ── Navigation host: the three screens slide horizontally between each other ──
+    Item {
+        id: pageHost
+        anchors.fill: parent
+        clip: true
+
     // ── Home: Levels + Picture Pack collections ──
     HomeScreen {
-        anchors.fill: parent
-        visible: win.screen === 0
+        width: pageHost.width; height: pageHost.height
+        x: win.pageX(0)
+        visible: x > -width && x < width
+        Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
         catalog: catalog
         pro: win.proEffective
         trial: LicenseController.tier === "trial"
@@ -164,8 +187,10 @@ ApplicationWindow {
 
     // ── Levels (the number ladder, reached from the Home "Levels" card) ──
     LevelSelect {
-        anchors.fill: parent
-        visible: win.screen === 2
+        width: pageHost.width; height: pageHost.height
+        x: win.pageX(2)
+        visible: x > -width && x < width
+        Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
         highestUnlocked: win.highestUnlocked
         unlockAll: appDebug            // debug builds: every level is playable
         onBack: win.screen = 0
@@ -183,8 +208,10 @@ ApplicationWindow {
     // ── Game screen ───────────────────────────────────────────────────────────────
     Item {
         id: gameScreen
-        anchors.fill: parent
-        visible: win.screen === 1
+        width: pageHost.width; height: pageHost.height
+        x: win.pageX(1)
+        visible: x > -width && x < width
+        Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
 
         Item {
             id: topbar
@@ -321,6 +348,7 @@ ApplicationWindow {
             }
         }
     }
+    } // pageHost
 
     // ── Cleared overlay ───────────────────────────────────────────────────────────
     Rectangle {

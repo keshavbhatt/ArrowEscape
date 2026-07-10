@@ -210,6 +210,31 @@ int main(int argc, char *argv[])
                 });
             }, Qt::QueuedConnection);
     }
+
+    // Dev-only: AE_NAV=<dir> navigates Home → Levels and grabs a burst of frames
+    // to capture the page-slide transition. Inert unless set.
+    const QByteArray navDir = qgetenv("AE_NAV");
+    if (!navDir.isEmpty()) {
+        QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app,
+            [navDir, &app](QObject *obj, const QUrl &) {
+                auto *w = qobject_cast<QQuickWindow *>(obj);
+                if (!w) return;
+                w->setProperty("screen", 0);              // start on Home
+                int *frame = new int(0);
+                auto grab = [w, navDir, frame]() {
+                    w->grabWindow().save(QString::fromUtf8(navDir)
+                        + QString("/s%1.png").arg(*frame, 3, 10, QChar('0')));
+                    ++(*frame);
+                };
+                QTimer::singleShot(600, &app, [w, grab, &app]() {
+                    grab();                                // Home, before
+                    w->setProperty("screen", 2);           // slide to Levels
+                    for (int t = 1; t <= 14; ++t)
+                        QTimer::singleShot(t * 28, &app, grab);
+                    QTimer::singleShot(600, &app, [&app] { app.quit(); });
+                });
+            }, Qt::QueuedConnection);
+    }
 #endif // AE_DEBUG
 
     // Dev-only: AE_HINT=<dir> triggers a hint and grabs a burst of frames to
