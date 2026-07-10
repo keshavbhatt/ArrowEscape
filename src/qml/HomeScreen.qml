@@ -16,6 +16,7 @@ Item {
     signal openLevels()
     signal openSettings()
     signal toggleTheme()
+    signal upgrade()
 
     Item {
         id: header
@@ -161,9 +162,10 @@ Item {
                                            color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.4) }
                                 }
                                 MouseArea {
-                                    id: ma; anchors.fill: parent; enabled: !tile.locked
-                                    cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                    onClicked: root.play(tile.modelData, packCol.modelData.id)
+                                    id: ma; anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: tile.locked ? root.upgrade()
+                                                           : root.play(tile.modelData, packCol.modelData.id)
                                 }
                             }
                         }

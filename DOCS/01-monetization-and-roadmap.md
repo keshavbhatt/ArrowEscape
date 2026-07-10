@@ -160,9 +160,13 @@ The game is aesthetic-driven (ink on parchment), so cosmetics convert well.
 Each phase is shippable on its own.
 
 ### M0 — Foundation (enables monetization)
-- [ ] Vendor `AccountAndLicense` + `LicenseController`; wire Free/Eval/Pro state.
-- [ ] Add a Pro-gate helper + an "Upgrade to Pro" dialog (non-nagging).
-- [ ] Settings groundwork for collections/themes/stats persistence.
+- [x] Vendored `modules/AccountAndLicense` + `src/licensing/LicenseController`
+      (QML singleton). Free / 10-day trial / Pro; `proEffective = LicenseController.pro`.
+      Debug: `AE_TIER=free|trial|pro` forces a tier.
+- [x] Pro gate + non-nagging **Upgrade to Pro** dialog (`upgradeRequested` →
+      dialog → openCheckout/openPortal). Locked packs / the Colorful-arrows toggle
+      open it; Settings shows an Upgrade button (free) or trial-days / Pro ✓.
+- [x] Settings persistence groundwork (QSettings) in place.
 
 ### M1 — Flagship: Picture Packs (the reason to buy)
 - [ ] Masked generation + solvability sweep.

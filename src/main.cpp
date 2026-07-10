@@ -36,6 +36,8 @@ int main(int argc, char *argv[])
 #endif
     // Dev-only: AE_PIC=<pictureId> auto-plays that Picture Pack board on launch.
     engine.rootContext()->setContextProperty("aePic", QString::fromUtf8(qgetenv("AE_PIC")));
+    // Dev-only: AE_TIER=free|trial|pro forces a licence tier (debug builds).
+    engine.rootContext()->setContextProperty("aeTier", QString::fromUtf8(qgetenv("AE_TIER")));
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
@@ -60,6 +62,8 @@ int main(int argc, char *argv[])
                         w->setProperty("aboutOpen", true);
                     if (!qEnvironmentVariableIsEmpty("AE_ALBUM"))
                         w->setProperty("screen", 2);
+                    if (!qEnvironmentVariableIsEmpty("AE_UPGRADE"))
+                        w->setProperty("upgradeOpen", true);
                     QTimer::singleShot(900, [w, shot, &app] {
                         w->grabWindow().save(QString::fromUtf8(shot));
                         app.quit();

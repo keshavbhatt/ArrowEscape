@@ -25,9 +25,12 @@ endif()
 
 # ── Qt ── (pure Qt Quick app: no Widgets) ─────────────────────────────────────
 find_package(Qt6 6.5 REQUIRED COMPONENTS
-    Core Gui Qml Quick QuickControls2 Svg Multimedia)
+    Core Gui Qml Quick QuickControls2 Svg Multimedia Network)
 
 qt_standard_project_setup(REQUIRES 6.5)
+
+# ── Reusable, app-agnostic account + licensing backend (Core + Network only) ──
+add_subdirectory(modules/AccountAndLicense)
 
 # Auto-generate qmldir entries for QML files kept in subdirectories.
 qt_policy(SET QTP0004 NEW)
@@ -74,6 +77,8 @@ qt_add_qml_module(arrowescape
     SOURCES
         src/core/ArrowBoard.h      src/core/ArrowBoard.cpp
         src/core/PictureCatalog.h  src/core/PictureCatalog.cpp
+        src/licensing/LicenseController.h  src/licensing/LicenseController.cpp
+        src/licensing/ArrowEscapeLicenseConfig.h
 )
 
 # ── Bundled assets: app icon + sound effects ──────────────────────────────────
@@ -97,10 +102,12 @@ qt_add_resources(arrowescape "appdata"
 target_include_directories(arrowescape PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/licensing
     ${CMAKE_BINARY_DIR}/generated
 )
 
 target_link_libraries(arrowescape PRIVATE
+    account_license                # reusable licensing backend (Core + Network)
     Qt6::Core
     Qt6::Gui
     Qt6::Qml
@@ -108,6 +115,7 @@ target_link_libraries(arrowescape PRIVATE
     Qt6::QuickControls2
     Qt6::Svg
     Qt6::Multimedia
+    Qt6::Network
 )
 
 target_compile_definitions(arrowescape PRIVATE

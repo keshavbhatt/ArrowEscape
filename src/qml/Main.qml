@@ -31,8 +31,19 @@ ApplicationWindow {
     property int  highestUnlocked: 1
     property string currentPictureId: ""     // set while playing a Picture Pack board
     property string currentPictureName: ""
-    property bool pro: false                 // Pro unlock (stub; wired to licensing later)
-    readonly property bool proEffective: pro || appDebug
+    // Pro entitlement comes from the licensing backend (paid OR inside the trial).
+    readonly property bool proEffective: LicenseController.pro
+    property bool upgradeOpen: false
+    property string upgradeFeature: qsTr("ArrowEscape Pro")
+
+    Connections {
+        target: LicenseController
+        function onUpgradeRequested(feature) {
+            win.upgradeFeature = feature;
+            win.upgradeOpen = true;
+        }
+    }
+    function requestUpgrade(feature) { win.upgradeFeature = feature; win.upgradeOpen = true; }
 
     // Persisted progress + preferences.
     Settings {
@@ -43,13 +54,15 @@ ApplicationWindow {
         property alias soundVolume: win.soundVolume
         property alias musicVolume: win.musicVolume
         property alias colorArrows: win.colorArrows
-        property alias pro: win.pro
         property alias dark: themeProxy.dark
     }
     QtObject { id: themeProxy; property bool dark: false; onDarkChanged: Theme.dark = dark }
     Component.onCompleted: {
         Theme.dark = themeProxy.dark;
         if (win.musicOn) music.play();
+        // Dev hook: force a licence tier (AE_TIER=free|trial|pro, debug builds).
+        if (typeof aeTier !== "undefined" && aeTier && aeTier.length && LicenseController.debugSetTier)
+            LicenseController.debugSetTier(aeTier);
         // Dev hook: jump straight into a Picture Pack board by id (AE_PIC).
         if (typeof aePic !== "undefined" && aePic && aePic.length) {
             for (var i = 0; i < catalog.packs.length; ++i) {
@@ -112,6 +125,7 @@ ApplicationWindow {
         onOpenLevels: win.screen = 2
         onOpenSettings: win.settingsOpen = true
         onToggleTheme: Theme.dark = !Theme.dark
+        onUpgrade: win.requestUpgrade(qsTr("Picture Packs"))
         onPlay: (pic, packId) => {
             win.currentPictureId = pic.id;
             win.currentPictureName = pic.name;
@@ -364,8 +378,25 @@ ApplicationWindow {
                             onMoved: (v) => win.soundVolume = v }
                 ToggleRow { label: qsTr("Dark mode"); checked: Theme.dark; onToggled: Theme.dark = !Theme.dark }
                 ToggleRow { label: qsTr("Colorful arrows"); checked: win.colorArrows
-                            locked: !win.proEffective; onToggled: win.colorArrows = !win.colorArrows }
-                Item { width: 1; height: 6 }
+                            locked: !win.proEffective; onToggled: win.colorArrows = !win.colorArrows
+                            onLockedTap: win.requestUpgrade(qsTr("Colorful arrows")) }
+
+                Item { width: 1; height: 4 }
+                PillButton {
+                    anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
+                    visible: !win.proEffective
+                    text: qsTr("Upgrade to Pro"); fill: Theme.good
+                    onClicked: { win.settingsOpen = false; win.requestUpgrade(qsTr("ArrowEscape Pro")); }
+                }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: win.proEffective
+                    text: LicenseController.tier === "trial"
+                          ? qsTr("Pro trial — %1 days left").arg(LicenseController.evaluationDaysRemaining)
+                          : qsTr("Pro unlocked ✓")
+                    color: Theme.good; font.pixelSize: 13; font.weight: Font.DemiBold
+                }
+                Item { width: 1; height: 2 }
                 PillButton {
                     anchors.horizontalCenter: parent.horizontalCenter
                     width: parent.width
@@ -462,6 +493,73 @@ ApplicationWindow {
                     cursorShape: Qt.PointingHandCursor; onClicked: parent.clicked() }
     }
 
+    // ── Upgrade to Pro dialog ──────────────────────────────────────────────────────
+    Rectangle {
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.4)
+        visible: opacity > 0
+        opacity: win.upgradeOpen ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        MouseArea { anchors.fill: parent; onClicked: win.upgradeOpen = false }
+        Rectangle {
+            anchors.centerIn: parent
+            width: 330; radius: Theme.rlg; color: Theme.surface
+            implicitHeight: ucol.implicitHeight + 40
+            MouseArea { anchors.fill: parent }
+            Column {
+                id: ucol
+                anchors.centerIn: parent
+                width: parent.width - 44
+                spacing: 12
+                Item {
+                    width: parent.width; height: 22
+                    IconButton { anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                                 icon: "close"; iconSize: 18; onClicked: win.upgradeOpen = false }
+                }
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 66; height: 66; radius: 18
+                    color: Qt.rgba(Theme.title.r, Theme.title.g, Theme.title.b, 0.16)
+                    Text { anchors.centerIn: parent; text: "★"; font.pixelSize: 34; color: Theme.title }
+                }
+                Text { anchors.horizontalCenter: parent.horizontalCenter
+                       text: qsTr("ArrowEscape Pro"); color: Theme.text
+                       font.pixelSize: 22; font.weight: Font.Bold }
+                Text { width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
+                       text: qsTr("Unlock %1 and everything below — one purchase, yours forever.").arg(win.upgradeFeature)
+                       color: Theme.textDim; font.pixelSize: 13 }
+                Column {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 7
+                    Repeater {
+                        model: [qsTr("Every Picture Pack + all future packs"),
+                                qsTr("Colorful arrows"), qsTr("A–Z Letters pack")]
+                        delegate: Row {
+                            spacing: 8
+                            Icon { name: "check"; size: 16; color: Theme.good
+                                   anchors.verticalCenter: parent.verticalCenter }
+                            Text { text: modelData; color: Theme.text; font.pixelSize: 13
+                                   anchors.verticalCenter: parent.verticalCenter }
+                        }
+                    }
+                }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: LicenseController.tier === "trial"
+                    text: qsTr("Trial — %1 days left").arg(LicenseController.evaluationDaysRemaining)
+                    color: Theme.title; font.pixelSize: 12; font.weight: Font.DemiBold
+                }
+                PillButton { anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
+                             text: qsTr("Upgrade"); fill: Theme.good
+                             onClicked: { LicenseController.openCheckout(); win.upgradeOpen = false } }
+                PillButton { anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
+                             text: qsTr("Restore / Manage")
+                             fill: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.14); ink: Theme.text
+                             onClicked: LicenseController.openPortal() }
+            }
+        }
+    }
+
     // A tappable link row for the About dialog.
     component AboutLink: Item {
         property string label: ""
@@ -538,6 +636,7 @@ ApplicationWindow {
         property bool checked: false
         property bool locked: false
         signal toggled
+        signal lockedTap
         width: parent ? parent.width : 200
         height: 48
         opacity: locked ? 0.55 : 1
@@ -564,8 +663,8 @@ ApplicationWindow {
                     x: checked ? parent.width - width - 3 : 3
                     Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
                 }
-                MouseArea { anchors.fill: parent; enabled: !locked
-                            cursorShape: Qt.PointingHandCursor; onClicked: toggled() }
+                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                            onClicked: locked ? lockedTap() : toggled() }
             }
         }
     }
