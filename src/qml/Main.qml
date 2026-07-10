@@ -393,53 +393,63 @@ ApplicationWindow {
             Column {
                 id: scol
                 anchors.centerIn: parent
-                width: parent.width - 40
-                spacing: 6
+                width: parent.width - 44
+                spacing: 4
                 Item {
-                    width: parent.width; height: 40
+                    width: parent.width; height: 44
                     Text { anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
                            text: qsTr("Settings"); color: Theme.text; font.pixelSize: 22; font.weight: Font.Bold }
                     IconButton { anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
                                  icon: "close"; onClicked: win.settingsOpen = false }
                 }
+
+                SectionLabel { text: qsTr("Audio") }
                 ToggleRow { label: qsTr("Music"); checked: win.musicOn; onToggled: win.musicOn = !win.musicOn }
-                SliderRow { label: qsTr("Music volume"); on: win.musicOn; value: win.musicVolume
+                SliderRow { label: qsTr("Volume"); inset: 14; on: win.musicOn; value: win.musicVolume
                             onMoved: (v) => win.musicVolume = v }
                 ToggleRow { label: qsTr("Sound"); checked: win.soundOn; onToggled: win.soundOn = !win.soundOn }
-                SliderRow { label: qsTr("Sound volume"); on: win.soundOn; value: win.soundVolume
+                SliderRow { label: qsTr("Volume"); inset: 14; on: win.soundOn; value: win.soundVolume
                             onMoved: (v) => win.soundVolume = v }
+
+                Divider {}
+                SectionLabel { text: qsTr("Appearance") }
                 ToggleRow { label: qsTr("Dark mode"); checked: Theme.dark; onToggled: Theme.dark = !Theme.dark }
                 ToggleRow { label: qsTr("Colorful arrows"); checked: win.colorArrows; pro: true
                             locked: !win.proEffective; onToggled: win.colorArrows = !win.colorArrows
                             onLockedTap: win.requestUpgrade(qsTr("Colorful arrows")) }
 
-                Item { width: 1; height: 4 }
-                Column {
-                    anchors.horizontalCenter: parent.horizontalCenter
+                Divider {}
+                // ── Account / Pro ──
+                Item {
+                    width: parent.width; height: 26
                     visible: win.proEffective
-                    spacing: 4
-                    ProBadge {
+                    Row {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        label: LicenseController.tier === "trial" ? qsTr("Pro trial") : qsTr("Pro")
-                    }
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        visible: LicenseController.tier === "trial"
-                        text: qsTr("%1 days left").arg(LicenseController.evaluationDaysRemaining)
-                        color: Theme.textDim; font.pixelSize: 11
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
+                        ProBadge {
+                            anchors.verticalCenter: parent.verticalCenter
+                            label: LicenseController.tier === "trial" ? qsTr("Pro trial") : qsTr("Pro")
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: LicenseController.tier === "trial"
+                            text: qsTr("%1 days left").arg(LicenseController.evaluationDaysRemaining)
+                            color: Theme.textDim; font.pixelSize: 12
+                        }
                     }
                 }
+                Item { width: 1; height: win.proEffective ? 6 : 2 }
                 // Upgrade is available to free AND trial users (only hidden once paid).
                 PillButton {
-                    anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
+                    width: parent.width
                     visible: !LicenseController.hasPaidAccess
                     text: LicenseController.tier === "trial" ? qsTr("Upgrade now") : qsTr("Upgrade to Pro")
                     fill: Theme.good
                     onClicked: { win.settingsOpen = false; win.requestUpgrade(qsTr("ArrowEscape Pro")); }
                 }
-                Item { width: 1; height: 2 }
+                Item { width: 1; height: LicenseController.hasPaidAccess ? 0 : 6 }
                 PillButton {
-                    anchors.horizontalCenter: parent.horizontalCenter
                     width: parent.width
                     text: qsTr("About")
                     fill: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.12); ink: Theme.text
@@ -641,23 +651,45 @@ ApplicationWindow {
     }
 
     // A labelled volume slider row (dimmed/disabled when its source is off).
+    // A small uppercase group heading (Audio / Appearance).
+    component SectionLabel: Text {
+        topPadding: 8
+        color: Theme.textDim
+        font.pixelSize: 11; font.weight: Font.DemiBold
+        font.capitalization: Font.AllUppercase; font.letterSpacing: 1.2
+    }
+
+    // A hairline divider between setting groups.
+    component Divider: Item {
+        width: parent ? parent.width : 200
+        height: 17
+        Rectangle {
+            anchors.centerIn: parent
+            width: parent.width; height: 1
+            color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.12)
+        }
+    }
+
+    // A volume slider that belongs to a toggle above it: it only appears while
+    // that toggle is on, and sits indented beneath it.
     component SliderRow: Item {
         property string label: ""
         property real value: 0.5
         property bool on: true
+        property real inset: 0
         signal moved(real v)
         width: parent ? parent.width : 200
-        height: 44
-        opacity: on ? 1.0 : 0.4
+        height: 38
+        visible: on                        // reveal only when the feature is on
         Text {
-            anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-            text: label; color: Theme.textDim; font.pixelSize: 15
+            anchors.left: parent.left; anchors.leftMargin: inset
+            anchors.verticalCenter: parent.verticalCenter
+            text: label; color: Theme.textDim; font.pixelSize: 14
         }
         Slider {
             id: sld
             anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-            width: 160; from: 0; to: 1
-            enabled: parent.on
+            width: 150; from: 0; to: 1
             value: parent.value
             onMoved: parent.moved(value)
 
