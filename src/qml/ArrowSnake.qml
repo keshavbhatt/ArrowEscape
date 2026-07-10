@@ -101,7 +101,8 @@ Item {
             if (snake.redAmt > 0)
                 col = snake._lerp(col, Theme.blockRed, snake.redAmt);
             ctx.strokeStyle = col;
-            const lw = cs * (snake.hinted ? 0.15 : 0.13);
+            // Thicken while flashing red so a blocked tap really pops.
+            const lw = cs * (snake.hinted ? 0.15 : 0.13) * (1 + 0.5 * snake.redAmt);
             ctx.lineWidth = lw;
 
             const dv = [[0, -1], [1, 0], [0, 1], [-1, 0]][snake.dir];
@@ -266,15 +267,13 @@ Item {
         fly.start();
     }
 
-    // Blocked tap: the whole arrow flashes red (double pulse, held long enough to
-    // read as "this one can't leave yet") plus a small shake.
+    // Blocked tap: the whole arrow snaps fully red at once and holds, so it's
+    // unmistakable that "this one can't leave yet", then fades back plus a shake.
     SequentialAnimation {
         id: redFlash
-        NumberAnimation { target: snake; property: "redAmt"; to: 1;    duration: 60 }
-        NumberAnimation { target: snake; property: "redAmt"; to: 0.45; duration: 130 }
-        NumberAnimation { target: snake; property: "redAmt"; to: 1;    duration: 110 }
-        PauseAnimation  { duration: 90 }
-        NumberAnimation { target: snake; property: "redAmt"; to: 0;    duration: 420; easing.type: Easing.InQuad }
+        NumberAnimation { target: snake; property: "redAmt"; to: 1; duration: 40 }
+        PauseAnimation  { duration: 480 }
+        NumberAnimation { target: snake; property: "redAmt"; to: 0; duration: 480; easing.type: Easing.InQuad }
     }
     property real _shakeX: 0
     SequentialAnimation {

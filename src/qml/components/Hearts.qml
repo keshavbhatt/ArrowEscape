@@ -33,6 +33,7 @@ Row {
             onFilledChanged: {
                 if (!filled) lose.restart();
                 else regain.restart();          // e.g. after a refill
+                hc.requestPaint();              // fill/outline changes with `filled`
             }
             onGlowChanged: hc.requestPaint()
 

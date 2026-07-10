@@ -176,6 +176,42 @@ int main(int argc, char *argv[])
     }
 #endif // AE_DEBUG
 
+    // Dev-only: AE_REFILL=<dir> drains all hearts (blocked taps → Lost), then calls
+    // addLives() and captures the header hearts to confirm they re-render as filled.
+#ifdef AE_DEBUG
+    const QByteArray refillDir = qgetenv("AE_REFILL");
+    if (!refillDir.isEmpty()) {
+        QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app,
+            [refillDir, startLevel, &app](QObject *obj, const QUrl &) {
+                auto *w = qobject_cast<QQuickWindow *>(obj);
+                if (!w) return;
+                auto *board = w->findChild<ArrowBoard *>();
+                if (!board) { app.quit(); return; }
+                w->setProperty("screen", 1);
+                if (startLevel > 0) board->startLevel(startLevel);
+                int *frame = new int(0);
+                auto grab = [w, refillDir, frame]() {
+                    w->grabWindow().save(QString::fromUtf8(refillDir)
+                        + QString("/f%1.png").arg(*frame, 3, 10, QChar('0')));
+                    ++(*frame);
+                };
+                QTimer::singleShot(700, &app, [board, grab, &app]() {
+                    // Drain every heart by tapping blocked arrows.
+                    for (int k = 0; k < 8 && board->drops() > 0; ++k) {
+                        const int b = board->debugBlockedId();
+                        if (b > 0) board->tap(b);
+                    }
+                    grab();                                   // hearts empty
+                    board->addLives();                        // refill
+                    grab();                                   // should be filled again
+                    for (int t = 1; t <= 8; ++t)
+                        QTimer::singleShot(t * 60, &app, grab);
+                    QTimer::singleShot(700, &app, [&app] { app.quit(); });
+                });
+            }, Qt::QueuedConnection);
+    }
+#endif // AE_DEBUG
+
     // Dev-only: AE_HINT=<dir> triggers a hint and grabs a burst of frames to
     // capture the hinted arrow's bob animation. Inert unless set.
     const QByteArray hintDir = qgetenv("AE_HINT");
