@@ -143,7 +143,9 @@ int main(int argc, char *argv[])
 
     // Dev-only: AE_BLOCKTAP=<dir> taps an arrow whose lane is NOT clear, capturing
     // the blocked-tap red flash + shake and the heart-loss animation together in a
-    // burst of frames. Inert unless set.
+    // burst of frames. Inert unless set. Debug builds only — it relies on
+    // ArrowBoard::debugBlockedId(), which is compiled out of release.
+#ifdef AE_DEBUG
     const QByteArray blockDir = qgetenv("AE_BLOCKTAP");
     if (!blockDir.isEmpty()) {
         QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app,
@@ -172,6 +174,7 @@ int main(int argc, char *argv[])
                 });
             }, Qt::QueuedConnection);
     }
+#endif // AE_DEBUG
 
     // Dev-only: AE_HINT=<dir> triggers a hint and grabs a burst of frames to
     // capture the hinted arrow's bob animation. Inert unless set.
