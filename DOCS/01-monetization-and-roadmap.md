@@ -161,7 +161,7 @@ Each phase is shippable on its own.
 
 ### M0 — Foundation (enables monetization)
 - [x] Vendored `modules/AccountAndLicense` + `src/licensing/LicenseController`
-      (QML singleton). Free / 10-day trial / Pro; `proEffective = LicenseController.pro`.
+      (QML singleton). Free / 5-day trial / Pro; `proEffective = LicenseController.pro`.
       Debug: `AE_TIER=free|trial|pro` forces a tier.
 - [x] Pro gate + non-nagging **Upgrade to Pro** dialog (`upgradeRequested` →
       dialog → openCheckout/openPortal). Locked packs / the Colorful-arrows toggle

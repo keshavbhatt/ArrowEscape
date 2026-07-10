@@ -29,8 +29,8 @@ inline AccountLicenseConfig arrowEscapeLicenseConfig()
     cfg.selfServicePortalUrl =
         QStringLiteral("https://ktechpit.com/USS/public/user/");
 
-    // 10-day full-featured trial (Pro unlocked during the evaluation).
-    cfg.evaluationDurationSecs = 10LL * 24LL * 60LL * 60LL;
+    // 5-day full-featured trial (Pro unlocked during the evaluation).
+    cfg.evaluationDurationSecs = 5LL * 24LL * 60LL * 60LL;
 
     return cfg;
 }

@@ -530,8 +530,8 @@ AccountLicenseManager::buildDebugStatus(DebugLicenseState state)
         s.hasPaidAccess           = true;
         s.licenseType             = QStringLiteral("evaluation");
         s.message                 = QStringLiteral("[DEBUG] Evaluation active");
-        s.evaluationEndTimestamp  = now + 7LL * 24LL * 3600LL;
-        s.evaluationDaysRemaining = 7;
+        s.evaluationEndTimestamp  = now + 5LL * 24LL * 3600LL;
+        s.evaluationDaysRemaining = 5;
         break;
 
     case DebugLicenseState::EvaluationExpired:

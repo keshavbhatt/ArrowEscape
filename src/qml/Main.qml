@@ -22,6 +22,7 @@ ApplicationWindow {
     property bool soundOn: true
     property bool musicOn: true
     property bool colorArrows: false         // Pro feature
+    property int  hintsLeft: 3                // free hints per board; Pro is unlimited
     property real soundVolume: 0.6
     property real musicVolume: 0.5
     property bool settingsOpen: false
@@ -112,6 +113,7 @@ ApplicationWindow {
             else
                 win.highestUnlocked = Math.max(win.highestUnlocked, game.level + 1);
         }
+        function onLevelChanged() { win.hintsLeft = 3; }   // fresh free hints per board
     }
 
     // ── Level-select screen ───────────────────────────────────────────────────────
@@ -204,7 +206,7 @@ ApplicationWindow {
                 anchors { left: parent.left; right: parent.right; top: titleRow.bottom
                           topMargin: 12; leftMargin: 18; rightMargin: 18 }
                 spacing: 14
-                Drops { count: game.drops; max: game.maxDrops }
+                Hearts { count: game.drops; max: game.maxDrops }
                 Item {
                     Layout.fillWidth: true
                     implicitHeight: 18
@@ -278,7 +280,20 @@ ApplicationWindow {
             anchors.bottomMargin: 22
             spacing: 40
             RoundTool { icon: "restart"; onClicked: game.restart() }
-            RoundTool { icon: "bulb";    onClicked: boardView.showHint() }
+            RoundTool {
+                icon: "bulb"
+                badge: win.proEffective ? "∞" : String(win.hintsLeft)
+                onClicked: {
+                    if (win.proEffective) {
+                        boardView.showHint();
+                    } else if (win.hintsLeft > 0) {
+                        boardView.showHint();
+                        win.hintsLeft -= 1;
+                    } else {
+                        win.requestUpgrade(qsTr("Unlimited hints"));
+                    }
+                }
+            }
         }
     }
 
@@ -331,17 +346,32 @@ ApplicationWindow {
                 width: parent.width - 48
                 spacing: 16
                 Text { anchors.horizontalCenter: parent.horizontalCenter
-                       text: qsTr("Out of Lives!"); color: Theme.text; font.pixelSize: 24; font.weight: Font.Bold }
-                Drops { anchors.horizontalCenter: parent.horizontalCenter; count: 3; max: 3 }
+                       text: qsTr("Out of Hearts!"); color: Theme.text; font.pixelSize: 24; font.weight: Font.Bold }
+                Hearts { anchors.horizontalCenter: parent.horizontalCenter; count: 3; max: 3 }
                 Text { anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
                        horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
-                       text: qsTr("Continue for free with 3 more lives."); color: Theme.textDim; font.pixelSize: 14 }
+                       text: win.proEffective ? qsTr("Refill your hearts and keep going.")
+                                              : qsTr("Refilling hearts to continue is a Pro feature.")
+                       color: Theme.textDim; font.pixelSize: 14 }
+                // Refill-to-continue is Pro; free players may only restart the board.
+                PillButton {
+                    anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
+                    text: win.proEffective ? qsTr("Refill hearts") : qsTr("Refill hearts  ·  Pro")
+                    fill: win.proEffective ? Theme.good : Theme.gold
+                    onClicked: win.proEffective ? game.addLives()
+                                                : win.requestUpgrade(qsTr("Heart refills"))
+                }
                 PillButton { anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
-                             text: qsTr("Free Lives"); fill: "#c98a3c"; onClicked: game.addLives() }
-                PillButton { anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
-                             text: game.pictureMode ? qsTr("Collections") : qsTr("Levels")
+                             text: qsTr("Restart board")
                              fill: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.14)
-                             ink: Theme.text; onClicked: { game.restart(); win.screen = win.returnScreen } }
+                             ink: Theme.text; onClicked: game.restart() }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: game.pictureMode ? qsTr("Back to Collections") : qsTr("Back to Levels")
+                    color: Theme.textDim; font.pixelSize: 13
+                    MouseArea { anchors.fill: parent; anchors.margins: -6; cursorShape: Qt.PointingHandCursor
+                                onClicked: { game.restart(); win.screen = win.returnScreen } }
+                }
             }
         }
     }
@@ -378,17 +408,11 @@ ApplicationWindow {
                 SliderRow { label: qsTr("Sound volume"); on: win.soundOn; value: win.soundVolume
                             onMoved: (v) => win.soundVolume = v }
                 ToggleRow { label: qsTr("Dark mode"); checked: Theme.dark; onToggled: Theme.dark = !Theme.dark }
-                ToggleRow { label: qsTr("Colorful arrows"); checked: win.colorArrows
+                ToggleRow { label: qsTr("Colorful arrows"); checked: win.colorArrows; pro: true
                             locked: !win.proEffective; onToggled: win.colorArrows = !win.colorArrows
                             onLockedTap: win.requestUpgrade(qsTr("Colorful arrows")) }
 
                 Item { width: 1; height: 4 }
-                PillButton {
-                    anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
-                    visible: !win.proEffective
-                    text: qsTr("Upgrade to Pro"); fill: Theme.good
-                    onClicked: { win.settingsOpen = false; win.requestUpgrade(qsTr("ArrowEscape Pro")); }
-                }
                 Column {
                     anchors.horizontalCenter: parent.horizontalCenter
                     visible: win.proEffective
@@ -403,6 +427,14 @@ ApplicationWindow {
                         text: qsTr("%1 days left").arg(LicenseController.evaluationDaysRemaining)
                         color: Theme.textDim; font.pixelSize: 11
                     }
+                }
+                // Upgrade is available to free AND trial users (only hidden once paid).
+                PillButton {
+                    anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
+                    visible: !LicenseController.hasPaidAccess
+                    text: LicenseController.tier === "trial" ? qsTr("Upgrade now") : qsTr("Upgrade to Pro")
+                    fill: Theme.good
+                    onClicked: { win.settingsOpen = false; win.requestUpgrade(qsTr("ArrowEscape Pro")); }
                 }
                 Item { width: 1; height: 2 }
                 PillButton {
@@ -487,6 +519,7 @@ ApplicationWindow {
     // A soft round toolbar button with an SVG icon.
     component RoundTool: Item {
         property string icon: ""
+        property string badge: ""
         signal clicked
         implicitWidth: 62; implicitHeight: 62
         Rectangle {
@@ -496,6 +529,15 @@ ApplicationWindow {
             scale: tma.pressed ? 0.94 : 1.0
             Behavior on scale { NumberAnimation { duration: 90 } }
             Icon { anchors.centerIn: parent; name: parent.parent.icon; size: 26; color: Theme.ink }
+        }
+        Rectangle {
+            visible: badge.length > 0
+            anchors.right: parent.right; anchors.top: parent.top
+            width: Math.max(20, bt.implicitWidth + 8); height: 20; radius: 10
+            color: Theme.select
+            border.width: 2; border.color: Theme.bg
+            Text { id: bt; anchors.centerIn: parent; text: badge; color: "white"
+                   font.pixelSize: 11; font.weight: Font.Bold }
         }
         MouseArea { id: tma; anchors.fill: parent; hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor; onClicked: parent.clicked() }
@@ -643,6 +685,7 @@ ApplicationWindow {
         property string label: ""
         property bool checked: false
         property bool locked: false
+        property bool pro: false          // marks a Pro feature (gold crown)
         signal toggled
         signal lockedTap
         width: parent ? parent.width : 200
@@ -653,13 +696,10 @@ ApplicationWindow {
         Row {
             anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
             spacing: 8
-            Rectangle {
-                visible: locked
+            Icon {
+                visible: pro
                 anchors.verticalCenter: parent.verticalCenter
-                radius: height / 2; color: Qt.rgba(Theme.title.r, Theme.title.g, Theme.title.b, 0.16)
-                width: pl.implicitWidth + 14; height: 18
-                Text { id: pl; anchors.centerIn: parent; text: qsTr("PRO")
-                       color: Theme.title; font.pixelSize: 10; font.weight: Font.Bold }
+                name: "crown"; size: 15; color: Theme.gold
             }
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter

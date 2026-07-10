@@ -111,17 +111,16 @@ Item {
                     spacing: 10
 
                     Row {
-                        spacing: 8
+                        spacing: 7
                         Text { text: packCol.modelData.name; color: Theme.text
                                font.pixelSize: 16; font.weight: Font.Bold
                                anchors.verticalCenter: parent.verticalCenter }
-                        Rectangle {
-                            visible: packCol.locked
+                        // A gold crown marks a Pro pack in every state (locked, or
+                        // playable via trial/purchase) so its value is always clear.
+                        Icon {
+                            visible: packCol.modelData.pro === true
                             anchors.verticalCenter: parent.verticalCenter
-                            radius: height / 2; color: Qt.rgba(Theme.title.r, Theme.title.g, Theme.title.b, 0.16)
-                            width: proLabel.implicitWidth + 16; height: 20
-                            Text { id: proLabel; anchors.centerIn: parent; text: qsTr("PRO")
-                                   color: Theme.title; font.pixelSize: 11; font.weight: Font.Bold }
+                            name: "crown"; size: 16; color: Theme.gold
                         }
                     }
 

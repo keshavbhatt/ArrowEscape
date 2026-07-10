@@ -33,7 +33,11 @@ class LicenseController : public QObject
 public:
     explicit LicenseController(QObject *parent = nullptr);
 
-    bool hasPaidAccess() const { return m_status.hasPaidAccess; }
+    // "Actually purchased" — deliberately NOT the module's hasPaidAccess, which
+    // also reports true during the trial (paid || evaluationActive). QML uses this
+    // to hide the Upgrade button only once the user has truly bought Pro, so the
+    // trial still shows an "Upgrade now" path.
+    bool hasPaidAccess() const { return m_status.active; }
     bool evaluationActive() const { return m_status.evaluationActive; }
     int evaluationDaysRemaining() const { return m_status.evaluationDaysRemaining; }
     bool pro() const { return m_status.hasPaidAccess || m_status.evaluationActive; }

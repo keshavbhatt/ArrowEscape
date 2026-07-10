@@ -48,16 +48,18 @@ Item {
         return { minc: minc, minr: minr, maxc: maxc, maxr: maxr };
     }
 
-    // While launching, the snake threads across the whole board, so it draws onto
-    // a board-sized canvas (only the few launching snakes pay this cost). At rest
-    // it uses a tight bbox canvas.
-    readonly property real ox: escaping ? 0 : (bb.minc * cellSize - m)
-    readonly property real oy: escaping ? 0 : (bb.minr * cellSize - m)
+    // While launching, the snake threads across the whole board AND keeps flying
+    // out past the grid — so its canvas is the board plus a wide margin on every
+    // side (the surrounding play area clips it at the window edge). Only the few
+    // launching snakes pay this cost. At rest it uses a tight bbox canvas.
+    readonly property real m2: cellSize * 14      // fly-out reach beyond the grid
+    readonly property real ox: escaping ? -m2 : (bb.minc * cellSize - m)
+    readonly property real oy: escaping ? -m2 : (bb.minr * cellSize - m)
 
     x: ox
     y: oy
-    width:  escaping ? gridCols * cellSize : (bb.maxc - bb.minc + 1) * cellSize + 2 * m
-    height: escaping ? gridRows * cellSize : (bb.maxr - bb.minr + 1) * cellSize + 2 * m
+    width:  escaping ? gridCols * cellSize + 2 * m2 : (bb.maxc - bb.minc + 1) * cellSize + 2 * m
+    height: escaping ? gridRows * cellSize + 2 * m2 : (bb.maxr - bb.minr + 1) * cellSize + 2 * m
 
     // ── Entrance animation ──
     // On load each arrow DRAWS itself from tail to head — the line is traced into
@@ -255,9 +257,10 @@ Item {
         if (!escaping) return;
         var head = cells[cells.length - 1];
         var edgeCells = [head.y, gridCols - 1 - head.x, gridRows - 1 - head.y, head.x][dir];
-        var travelCells = (cells.length - 1) + edgeCells + 1.2;
+        // Travel until the whole snake clears the grid AND flies out to the window.
+        var travelCells = (cells.length - 1) + edgeCells + 14;
         fly.to = travelCells * cellSize;
-        fly.duration = Math.min(620, Math.max(240, travelCells * 34));
+        fly.duration = Math.min(720, Math.max(260, travelCells * 30));
         fly.start();
     }
 

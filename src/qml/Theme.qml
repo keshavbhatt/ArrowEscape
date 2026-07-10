@@ -20,7 +20,8 @@ QtObject {
 
     // ── Accents ──
     readonly property color select:  "#3ea0e6"   // highlighted / hinted arrow
-    readonly property color drop:     "#5bb3ea"   // water-drop lives
+    readonly property color drop:     "#5bb3ea"   // progress bar / sliders
+    readonly property color heart:    dark ? "#f0687e" : "#e0556b"   // lives
     readonly property color good:     "#57b98a"
     readonly property color blockRed: "#c0563a"   // blocked-tap flash
 

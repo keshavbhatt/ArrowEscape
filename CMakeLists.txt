@@ -53,7 +53,7 @@ set(AE_QML_FILES
     LevelSelect.qml
     HomeScreen.qml
     components/PicturePreview.qml
-    components/Drops.qml
+    components/Hearts.qml
     components/Icon.qml
     components/IconButton.qml
     components/PillButton.qml
