@@ -21,7 +21,7 @@ ApplicationWindow {
 
     property bool soundOn: true
     property bool musicOn: true
-    property bool colorArrows: false         // Pro feature
+    property bool colorArrows: true          // Pro feature; on by default, off when free
     property int  hintsLeft: 3                // free hints per board; Pro is unlimited
     property real soundVolume: 0.6
     property real musicVolume: 0.5
@@ -43,8 +43,20 @@ ApplicationWindow {
             win.upgradeFeature = feature;
             win.upgradeOpen = true;
         }
+        // React whenever the licence resolves or changes.
+        function onStatusChanged()   { win.syncColorArrows(); }
+        function onCheckingChanged()  { win.syncColorArrows(); }
     }
     function requestUpgrade(feature) { win.upgradeFeature = feature; win.upgradeOpen = true; }
+
+    // Colourful arrows is Pro-only and on by default. Once the licence has
+    // definitively resolved to free (trial ended / never Pro), switch it off.
+    // Guard on !checking so the async resolution doesn't clear it for a real
+    // Pro/trial user during the initial load.
+    function syncColorArrows() {
+        if (!LicenseController.checking && LicenseController.tier === "free")
+            win.colorArrows = false;
+    }
 
     // Persisted progress + preferences.
     Settings {
@@ -64,6 +76,7 @@ ApplicationWindow {
         // Dev hook: force a licence tier (AE_TIER=free|trial|pro, debug builds).
         if (typeof aeTier !== "undefined" && aeTier && aeTier.length && LicenseController.debugSetTier)
             LicenseController.debugSetTier(aeTier);
+        win.syncColorArrows();   // apply the free-tier lock to an already-cached status
         // Dev hook: jump straight into a Picture Pack board by id (AE_PIC).
         if (typeof aePic !== "undefined" && aePic && aePic.length) {
             for (var i = 0; i < catalog.packs.length; ++i) {
