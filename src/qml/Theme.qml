@@ -38,6 +38,9 @@ QtObject {
         return p[((i % p.length) + p.length) % p.length];
     }
 
+    // Golden accent for the Pro crown badge.
+    readonly property color gold:    dark ? "#f0c552" : "#d99a1e"
+
     // ── Text ──
     readonly property color title:   dark ? "#d9a24e" : "#a9772e"
     readonly property color text:    dark ? "#e7dcc6" : "#6f5a3a"

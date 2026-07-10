@@ -57,6 +57,7 @@ set(AE_QML_FILES
     components/Icon.qml
     components/IconButton.qml
     components/PillButton.qml
+    components/ProBadge.qml
 )
 set(AE_QML_PATHS "")
 foreach(qml IN LISTS AE_QML_FILES)

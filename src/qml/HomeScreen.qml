@@ -11,6 +11,7 @@ Item {
 
     property var catalog            // PictureCatalog
     property bool pro: false
+    property bool trial: false
     property int  levelToContinue: 1
     signal play(var pic, string packId)
     signal openLevels()
@@ -26,6 +27,12 @@ Item {
             anchors.centerIn: parent
             text: "ArrowEscape"; color: Theme.title
             font.pixelSize: 24; font.weight: Font.Bold
+        }
+        ProBadge {
+            anchors.left: parent.left; anchors.leftMargin: 12
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.pro
+            label: root.trial ? qsTr("Pro trial") : qsTr("Pro")
         }
         IconButton {
             anchors.right: setBtn.left

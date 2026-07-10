@@ -121,6 +121,7 @@ ApplicationWindow {
         visible: win.screen === 0
         catalog: catalog
         pro: win.proEffective
+        trial: LicenseController.tier === "trial"
         levelToContinue: win.highestUnlocked
         onOpenLevels: win.screen = 2
         onOpenSettings: win.settingsOpen = true
@@ -388,13 +389,20 @@ ApplicationWindow {
                     text: qsTr("Upgrade to Pro"); fill: Theme.good
                     onClicked: { win.settingsOpen = false; win.requestUpgrade(qsTr("ArrowEscape Pro")); }
                 }
-                Text {
+                Column {
                     anchors.horizontalCenter: parent.horizontalCenter
                     visible: win.proEffective
-                    text: LicenseController.tier === "trial"
-                          ? qsTr("Pro trial — %1 days left").arg(LicenseController.evaluationDaysRemaining)
-                          : qsTr("Pro unlocked ✓")
-                    color: Theme.good; font.pixelSize: 13; font.weight: Font.DemiBold
+                    spacing: 4
+                    ProBadge {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        label: LicenseController.tier === "trial" ? qsTr("Pro trial") : qsTr("Pro")
+                    }
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        visible: LicenseController.tier === "trial"
+                        text: qsTr("%1 days left").arg(LicenseController.evaluationDaysRemaining)
+                        color: Theme.textDim; font.pixelSize: 11
+                    }
                 }
                 Item { width: 1; height: 2 }
                 PillButton {
