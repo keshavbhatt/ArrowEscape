@@ -35,6 +35,9 @@ ApplicationWindow {
     property string currentPictureName: ""
     // Pro entitlement comes from the licensing backend (paid OR inside the trial).
     readonly property bool proEffective: LicenseController.pro
+    // A few perks (unlimited hints, heart refills) are reserved for *purchased*
+    // Pro — the trial does not include them, so they still nudge an upgrade.
+    readonly property bool proPaid: LicenseController.hasPaidAccess
     property bool upgradeOpen: false
     property string upgradeFeature: qsTr("ArrowEscape Pro")
     readonly property string donateUrl: "https://www.paypal.me/keshavnrj/9"
@@ -334,9 +337,9 @@ ApplicationWindow {
             RoundTool { icon: "restart"; onClicked: game.restart() }
             RoundTool {
                 icon: "bulb"
-                badge: win.proEffective ? "∞" : String(win.hintsLeft)
+                badge: win.proPaid ? "∞" : String(win.hintsLeft)
                 onClicked: {
-                    if (win.proEffective) {
+                    if (win.proPaid) {
                         boardView.showHint();
                     } else if (win.hintsLeft > 0) {
                         boardView.showHint();
@@ -403,16 +406,16 @@ ApplicationWindow {
                 Hearts { anchors.horizontalCenter: parent.horizontalCenter; count: 3; max: 3 }
                 Text { anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
                        horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
-                       text: win.proEffective ? qsTr("Refill your hearts and keep going.")
-                                              : qsTr("Refilling hearts to continue is a Pro feature.")
+                       text: win.proPaid ? qsTr("Refill your hearts and keep going.")
+                                         : qsTr("Refilling hearts to continue is a Pro feature.")
                        color: Theme.textDim; font.pixelSize: 14 }
-                // Refill-to-continue is Pro; free players may only restart the board.
+                // Refill-to-continue is a purchased-Pro perk; everyone else restarts.
                 PillButton {
                     anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
-                    text: win.proEffective ? qsTr("Refill hearts") : qsTr("Refill hearts  ·  Pro")
-                    fill: win.proEffective ? Theme.good : Theme.gold
-                    onClicked: win.proEffective ? game.addLives()
-                                                : win.requestUpgrade(qsTr("Heart refills"))
+                    text: win.proPaid ? qsTr("Refill hearts") : qsTr("Refill hearts  ·  Pro")
+                    fill: win.proPaid ? Theme.good : Theme.gold
+                    onClicked: win.proPaid ? game.addLives()
+                                           : win.requestUpgrade(qsTr("Heart refills"))
                 }
                 PillButton { anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
                              text: qsTr("Restart board")
