@@ -28,6 +28,7 @@ apps:
       - x11
       - desktop
       - desktop-legacy
+      - network         # licence status check (ktechpit USS)
       # Music + sound effects are looping SoundEffects (QAudioSink) — no
       # MediaPlayer/ffmpeg — so only the audio-output service is needed.
       - audio-playback
