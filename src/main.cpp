@@ -211,6 +211,30 @@ int main(int argc, char *argv[])
             }, Qt::QueuedConnection);
     }
 
+    // Dev-only: AE_HINTSPAM rapidly "clicks" the hint button several times and
+    // prints hintsLeft before/after — proving repeated taps spend at most one hint.
+    if (!qEnvironmentVariableIsEmpty("AE_HINTSPAM")) {
+        QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app,
+            [startLevel, &app](QObject *obj, const QUrl &) {
+                auto *w = qobject_cast<QQuickWindow *>(obj);
+                if (!w) return;
+                auto *board = w->findChild<ArrowBoard *>();
+                if (!board) { app.quit(); return; }
+                w->setProperty("screen", 1);
+                board->startLevel(startLevel > 0 ? startLevel : 5);
+                QTimer::singleShot(700, &app, [w, &app]() {
+                    auto *tool = w->findChild<QObject *>(QStringLiteral("hintTool"));
+                    const int before = w->property("hintsLeft").toInt();
+                    for (int i = 0; i < 6; ++i)                 // 6 rapid taps
+                        if (tool) QMetaObject::invokeMethod(tool, "clicked");
+                    const int after = w->property("hintsLeft").toInt();
+                    printf("HINTSPAM before=%d after=%d (6 rapid clicks)\n", before, after);
+                    fflush(stdout);
+                    app.quit();
+                });
+            }, Qt::QueuedConnection);
+    }
+
     // Dev-only: AE_NAV=<dir> navigates Home → Levels and grabs a burst of frames
     // to capture the page-slide transition. Inert unless set.
     const QByteArray navDir = qgetenv("AE_NAV");

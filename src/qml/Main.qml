@@ -336,14 +336,16 @@ ApplicationWindow {
             spacing: 40
             RoundTool { icon: "restart"; onClicked: game.restart() }
             RoundTool {
+                objectName: "hintTool"          // dev hooks (AE_HINTSPAM) locate this
                 icon: "bulb"
                 badge: win.proPaid ? "∞" : String(win.hintsLeft)
                 onClicked: {
                     if (win.proPaid) {
                         boardView.showHint();
                     } else if (win.hintsLeft > 0) {
-                        boardView.showHint();
-                        win.hintsLeft -= 1;
+                        // Charge a hint only when one is actually revealed.
+                        if (boardView.showHint())
+                            win.hintsLeft -= 1;
                     } else {
                         win.requestUpgrade(qsTr("Unlimited hints"));
                     }

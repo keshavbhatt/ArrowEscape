@@ -57,11 +57,16 @@ Item {
         function onBoardChanged() { root.resetView(); dots.requestPaint(); }
     }
 
-    // Hint state.
+    // Hint state. Returns true only when a NEW hint was actually revealed, so the
+    // caller can charge a hint only then — repeated taps while a hint is already
+    // showing (or when there's nothing to hint) cost nothing.
     function showHint() {
-        if (!board) return;
+        if (!board) return false;
+        if (hintId !== -1) return false;         // a hint is already on screen
         const id = board.hint();
-        if (id > 0) { hintId = id; hintTimer.restart(); }
+        if (id <= 0) return false;               // nothing hintable (e.g. board solved)
+        hintId = id; hintTimer.restart();
+        return true;
     }
     Timer { id: hintTimer; interval: 2600; onTriggered: root.hintId = -1 }
 
