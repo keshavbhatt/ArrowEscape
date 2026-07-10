@@ -28,7 +28,9 @@ Item {
 
     readonly property bool hinted: hintId === arrowId
     readonly property real m: cellSize * 0.6
+    readonly property var dirVec: [[0, -1], [1, 0], [0, 1], [-1, 0]][dir]
     property real redAmt: 0
+    property real hintNudge: 0          // bob distance along the launch direction
     property real launchArc: 0          // distance the thread window has advanced
 
     signal tapped(int id)
@@ -221,7 +223,7 @@ Item {
         }
     }
 
-    onHintedChanged:   canvas.requestPaint()
+    onHintedChanged:   { if (!hinted) hintNudge = 0; canvas.requestPaint(); }
     onColorfulChanged: canvas.requestPaint()
     onRedAmtChanged:   canvas.requestPaint()
     onLaunchArcChanged: canvas.requestPaint()
@@ -281,7 +283,23 @@ Item {
         NumberAnimation { target: snake; property: "_shakeX"; to:  5; duration: 70 }
         NumberAnimation { target: snake; property: "_shakeX"; to:  0; duration: 55 }
     }
-    transform: Translate { x: snake._shakeX }
+
+    // Hint: the arrow bobs toward its launch direction and springs back, on a
+    // loop, so it's obvious both WHICH arrow and WHICH WAY it will leave.
+    SequentialAnimation {
+        id: hintBob
+        running: snake.hinted && !snake.escaping
+        loops: Animation.Infinite
+        NumberAnimation { target: snake; property: "hintNudge"; to: snake.cellSize * 0.24
+                          duration: 300; easing.type: Easing.OutQuad }
+        NumberAnimation { target: snake; property: "hintNudge"; to: 0
+                          duration: 520; easing.type: Easing.OutBounce }
+        PauseAnimation  { duration: 160 }
+    }
+    transform: Translate {
+        x: snake._shakeX + snake.dirVec[0] * snake.hintNudge
+        y: snake.dirVec[1] * snake.hintNudge
+    }
 
     Connections {
         target: snake.board

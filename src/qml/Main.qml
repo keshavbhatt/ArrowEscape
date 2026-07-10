@@ -268,6 +268,7 @@ ApplicationWindow {
 
         Board {
             id: boardView
+            objectName: "boardView"      // dev hooks (AE_HINT) locate this
             board: game
             colorful: win.colorArrows && win.proEffective
             anchors { top: debugBar.bottom; left: parent.left; right: parent.right; bottom: toolbar.top; margins: 12 }

@@ -173,6 +173,35 @@ int main(int argc, char *argv[])
             }, Qt::QueuedConnection);
     }
 
+    // Dev-only: AE_HINT=<dir> triggers a hint and grabs a burst of frames to
+    // capture the hinted arrow's bob animation. Inert unless set.
+    const QByteArray hintDir = qgetenv("AE_HINT");
+    if (!hintDir.isEmpty()) {
+        QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app,
+            [hintDir, startLevel, &app](QObject *obj, const QUrl &) {
+                auto *w = qobject_cast<QQuickWindow *>(obj);
+                if (!w) return;
+                w->setProperty("screen", 1);
+                if (auto *b = w->findChild<ArrowBoard *>(); b && startLevel > 0)
+                    b->startLevel(startLevel);
+                auto *view = w->findChild<QObject *>(QStringLiteral("boardView"));
+                if (!view) { app.quit(); return; }
+                int *frame = new int(0);
+                auto grab = [w, hintDir, frame]() {
+                    w->grabWindow().save(QString::fromUtf8(hintDir)
+                        + QString("/n%1.png").arg(*frame, 3, 10, QChar('0')));
+                    ++(*frame);
+                };
+                QTimer::singleShot(700, &app, [view, grab, &app]() {
+                    grab();                                   // before
+                    QMetaObject::invokeMethod(view, "showHint");
+                    for (int t = 1; t <= 24; ++t)
+                        QTimer::singleShot(t * 40, &app, grab);   // during the bob
+                    QTimer::singleShot(1100, &app, [&app] { app.quit(); });
+                });
+            }, Qt::QueuedConnection);
+    }
+
     // Dev-only: AE_INTRO=<dir> grabs a burst of frames right at load to capture
     // the board entrance animation. Inert unless set.
     const QByteArray introDir = qgetenv("AE_INTRO");
