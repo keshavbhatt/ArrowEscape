@@ -58,6 +58,12 @@ public:
 #ifdef QT_DEBUG
     /// Debug builds only: force a simulated tier ("pro"/"trial"/"free"/"neterr").
     Q_INVOKABLE void debugSetTier(const QString &tier);
+    /// Debug builds only: backdate the trial by N days and return days-remaining.
+    Q_INVOKABLE int debugTrialDaysAfter(int daysElapsed)
+    { return m_manager.debugTrialDaysAfterElapsed(daysElapsed); }
+    /// Debug builds only: read days-remaining from the persisted start (no write).
+    Q_INVOKABLE int debugReadTrialDays()
+    { return m_manager.debugReadTrialDays(); }
 #endif
 
 signals:

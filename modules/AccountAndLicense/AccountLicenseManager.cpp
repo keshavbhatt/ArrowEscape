@@ -505,6 +505,20 @@ AccountLicenseManager::debugLicenseState() const
     return m_debugLicenseState;
 }
 
+int AccountLicenseManager::debugTrialDaysAfterElapsed(int daysElapsed)
+{
+    // Pretend the trial began `daysElapsed` days ago, then recompute from the
+    // real cached-status path (no network) to check the countdown maths.
+    m_store->setValue(QStringLiteral("license/eval_start_utc"),
+                      nowUtcSecs() - qint64(daysElapsed) * 24 * 60 * 60);
+    return buildCachedStatus().evaluationDaysRemaining;
+}
+
+int AccountLicenseManager::debugReadTrialDays() const
+{
+    return buildCachedStatus().evaluationDaysRemaining;
+}
+
 /*static*/ AccountLicenseManager::LicenseStatus
 AccountLicenseManager::buildDebugStatus(DebugLicenseState state)
 {

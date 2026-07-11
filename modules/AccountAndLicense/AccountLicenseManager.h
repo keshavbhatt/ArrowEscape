@@ -151,6 +151,13 @@ public:
     void             setDebugLicenseState(DebugLicenseState state);
     DebugLicenseState debugLicenseState() const;
 
+    /// Backdate the stored evaluation start by @p daysElapsed days and return the
+    /// freshly-recomputed evaluationDaysRemaining — for verifying the countdown.
+    int              debugTrialDaysAfterElapsed(int daysElapsed);
+    /// Read-only: evaluationDaysRemaining from the *persisted* start (synchronous,
+    /// no network) — for verifying the start survives restarts.
+    int              debugReadTrialDays() const;
+
 private:
     static LicenseStatus buildDebugStatus(DebugLicenseState state);
     DebugLicenseState m_debugLicenseState = DebugLicenseState::None;

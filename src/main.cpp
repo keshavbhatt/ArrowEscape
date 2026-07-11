@@ -1,5 +1,8 @@
 #include "AppInfo.h"
 #include "ArrowBoard.h"
+#ifdef AE_DEBUG
+#include "LicenseController.h"
+#endif
 
 #include <QGuiApplication>
 #include <QIcon>
@@ -208,6 +211,36 @@ int main(int argc, char *argv[])
                         QTimer::singleShot(t * 60, &app, grab);
                     QTimer::singleShot(700, &app, [&app] { app.quit(); });
                 });
+            }, Qt::QueuedConnection);
+    }
+
+    // Dev-only trial-clock checks (all synchronous, no network):
+    //   AE_LICREAD    print days-remaining from the *persisted* start (no write)
+    //   AE_LICSET=<n> backdate the persisted start by n days, then print
+    //   AE_LICTEST    print the countdown for elapsed 0..6 days
+    if (!qEnvironmentVariableIsEmpty("AE_LICREAD")
+        || !qEnvironmentVariableIsEmpty("AE_LICSET")
+        || !qEnvironmentVariableIsEmpty("AE_LICTEST")) {
+        QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app,
+            [&engine, &app](QObject *, const QUrl &) {
+                auto *lc = engine.singletonInstance<LicenseController *>(
+                    "ArrowEscape", "LicenseController");
+                if (lc) {
+                    if (!qEnvironmentVariableIsEmpty("AE_LICREAD"))
+                        printf("LICREAD persisted daysLeft=%d\n", lc->debugReadTrialDays());
+                    if (!qEnvironmentVariableIsEmpty("AE_LICSET")) {
+                        const int n = qEnvironmentVariableIntValue("AE_LICSET");
+                        lc->debugTrialDaysAfter(n);
+                        printf("LICSET backdated %dd -> persisted daysLeft=%d\n",
+                               n, lc->debugReadTrialDays());
+                    }
+                    if (!qEnvironmentVariableIsEmpty("AE_LICTEST"))
+                        for (int d = 0; d <= 6; ++d)
+                            printf("LICTEST elapsed=%dd -> daysLeft=%d\n",
+                                   d, lc->debugTrialDaysAfter(d));
+                    fflush(stdout);
+                }
+                app.quit();
             }, Qt::QueuedConnection);
     }
 
