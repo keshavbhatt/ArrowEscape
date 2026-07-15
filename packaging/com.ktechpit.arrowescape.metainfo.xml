@@ -41,15 +41,27 @@
 
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/01-play.png</image>
+      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/01-home.png</image>
+      <caption>Home screen with level progress and Picture Pack collections</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/02-play.png</image>
       <caption>Unpick a tangled board of arrows one clear path at a time</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/02-master.png</image>
+      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/03-master.png</image>
       <caption>Difficulty climbs to huge, densely packed Master boards</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/03-levels.png</image>
+      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/04-picture-packs.png</image>
+      <caption>Picture Packs — solve arrows arranged into shapes to reveal a picture</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/05-dark-mode.png</image>
+      <caption>Easy on the eyes with a built-in dark theme</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/06-levels.png</image>
       <caption>Hundreds of levels with saved progress</caption>
     </screenshot>
   </screenshots>
