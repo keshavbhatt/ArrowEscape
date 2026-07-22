@@ -34,8 +34,11 @@ int main(int argc, char *argv[])
 
     // Expose whether this is a debug build to QML, which unlocks the in-app level
     // jumper / unlock-all testing aids. Always set so `appDebug` is defined.
+    // Screenshot runs (AE_SHOT) present as non-debug so the debug bar and
+    // unlock-all never leak into store assets, while AE_TIER etc. keep working.
 #ifdef AE_DEBUG
-    engine.rootContext()->setContextProperty("appDebug", true);
+    engine.rootContext()->setContextProperty("appDebug",
+                                             qgetenv("AE_SHOT").isEmpty());
 #else
     engine.rootContext()->setContextProperty("appDebug", false);
 #endif
