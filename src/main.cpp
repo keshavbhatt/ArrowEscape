@@ -400,6 +400,19 @@ int main(int argc, char *argv[])
                     printf("INPUTTEST click  tap %s\n", tapReached ? "OK" : "FAIL");
                     fflush(stdout);
 
+                    // 3b) Hover: a buttonless move must highlight the snake
+                    // under the cursor (visual check via the saved PNG).
+                    const QPointF hp = click + QPointF(34, 34);
+                    QMouseEvent hov(QEvent::MouseMove, hp, hp,
+                                    w->mapToGlobal(hp.toPoint()),
+                                    Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+                    hov.setTimestamp(ts += 80);
+                    QCoreApplication::sendEvent(w, &hov);
+                    QCoreApplication::processEvents();
+                    if (qgetenv("AE_INPUTTEST").size() > 1)
+                        w->grabWindow().save(QString::fromUtf8(qgetenv("AE_INPUTTEST"))
+                                             + "/hover.png");
+
                     // 4) Orientation reset: tilt the board as a rotating pinch
                     // would, then straighten it via the reset button's path.
                     // AE_INPUTTEST=<dir> additionally saves before/after PNGs.

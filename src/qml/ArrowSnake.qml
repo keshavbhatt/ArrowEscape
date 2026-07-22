@@ -27,6 +27,12 @@ Item {
     property bool colorful: false      // Pro: each snake gets its own colour
 
     readonly property bool hinted: hintId === arrowId
+    // Hover: the pointer is over ANY of this snake's cells, so the whole snake
+    // highlights and the player can see exactly which arrow a click will tap.
+    // A counter (not a bool) survives the exit-old-cell/enter-new-cell event
+    // order when sliding along the snake's own body.
+    property int _hoverCells: 0
+    readonly property bool hovered: _hoverCells > 0 && !escaping
     readonly property real m: cellSize * 0.6
     readonly property var dirVec: [[0, -1], [1, 0], [0, 1], [-1, 0]][dir]
     property real redAmt: 0
@@ -98,11 +104,16 @@ Item {
             ctx.lineJoin = "round";
             var col = snake.hinted ? Theme.select
                     : (snake.colorful ? Theme.arrowColor(snake.arrowId) : Theme.ink);
+            // Hover preview: tint the whole snake toward the select blue —
+            // softer than a hint, but enough to read as "this one".
+            if (snake.hovered && !snake.hinted)
+                col = snake._lerp(col, Theme.select, 0.45);
             if (snake.redAmt > 0)
                 col = snake._lerp(col, Theme.blockRed, snake.redAmt);
             ctx.strokeStyle = col;
-            // Thicken while flashing red so a blocked tap really pops.
-            const lw = cs * (snake.hinted ? 0.15 : 0.13) * (1 + 0.5 * snake.redAmt);
+            // Thicken while hovered/hinted, and while flashing red, so the
+            // active snake pops out of the tangle.
+            const lw = cs * ((snake.hinted || snake.hovered) ? 0.15 : 0.13) * (1 + 0.5 * snake.redAmt);
             ctx.lineWidth = lw;
 
             const dv = [[0, -1], [1, 0], [0, 1], [-1, 0]][snake.dir];
@@ -225,6 +236,7 @@ Item {
     }
 
     onHintedChanged:   { if (!hinted) hintNudge = 0; canvas.requestPaint(); }
+    onHoveredChanged:  canvas.requestPaint()
     onColorfulChanged: canvas.requestPaint()
     onRedAmtChanged:   canvas.requestPaint()
     onLaunchArcChanged: canvas.requestPaint()
@@ -249,7 +261,10 @@ Item {
                 gesturePolicy: TapHandler.DragThreshold   // moving = pan, not a tap
                 onTapped: snake.tapped(snake.arrowId)
             }
-            HoverHandler { cursorShape: Qt.PointingHandCursor }
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+                onHoveredChanged: snake._hoverCells += hovered ? 1 : -1
+            }
         }
     }
 
