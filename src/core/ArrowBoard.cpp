@@ -3,6 +3,7 @@
 #include <QRandomGenerator>
 #include <QSet>
 #include <algorithm>
+#include <cmath>
 
 namespace {
 // Unit step for each direction, as (dCol, dRow).
@@ -326,22 +327,25 @@ void ArrowBoard::startLevel(int level)
     m_mask.clear();            // normal levels fill the whole rectangle
     m_pictureMode = false;
 
-    // Difficulty ramps with the level up to a hard plateau reached ~level 200:
-    // the grid grows, snakes get longer, and arrows point less toward their
+    // Difficulty ramps with the level up to a hard plateau reached ~level 120.
+    // The ramp is sqrt-eased — steep at first, flattening later — so complexity
+    // arrives FAST (a level-13 board is already a dense ~14x20 labyrinth, like
+    // the reference games) instead of dripping in over hundreds of easy levels.
+    // The grid grows, snakes get longer, and arrows point less toward their
     // nearest edge (more inward = deeper dependency chains). Late boards far
     // exceed the screen — the board view is zoomable/pannable to navigate them.
-    const double t = std::clamp((m_level - 1) / 200.0, 0.0, 1.0);
+    const double t = std::sqrt(std::clamp((m_level - 1) / 120.0, 0.0, 1.0));
     auto lerp = [t](double a, double b) { return a + (b - a) * t; };
 
-    const int cols    = std::clamp(int(std::lround(lerp(6, 30))), 6, 30);
-    const int rows    = std::clamp(int(std::lround(cols * 1.4)), 9, 42);
+    const int cols    = std::clamp(int(std::lround(lerp(7, 30))), 7, 30);
+    const int rows    = std::clamp(int(std::lround(cols * 1.4)), 10, 42);
     // Long snakes ARE the puzzle: short arrows read at a glance, long winding
     // ones force the player to trace how bodies cross each other's lanes.
-    const int lenMin   = int(std::lround(lerp(4, 6)));
-    const int lenMax   = int(std::lround(lerp(8, 16)));
+    const int lenMin   = int(std::lround(lerp(4, 7)));
+    const int lenMax   = int(std::lround(lerp(9, 18)));
     // Long-lane bias ramps up so early levels peel easily (short, outward lanes)
     // and late levels are a deeply tangled, fully-packed labyrinth.
-    const int longBias = int(std::lround(lerp(35, 85)));
+    const int longBias = int(std::lround(lerp(40, 85)));
 
     generate(rows, cols, lenMin, lenMax, longBias);
     emit levelChanged();

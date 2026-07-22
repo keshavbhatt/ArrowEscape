@@ -108,11 +108,12 @@ ApplicationWindow {
         }
     }
 
+    // Thresholds track the sqrt-eased difficulty ramp (plateau ~level 120).
     readonly property string difficulty:
-        game.level <= 10  ? qsTr("Easy")
-      : game.level <= 45  ? qsTr("Normal")
-      : game.level <= 110 ? qsTr("Hard")
-      : game.level <= 200 ? qsTr("Expert")
+        game.level <= 5   ? qsTr("Easy")
+      : game.level <= 12  ? qsTr("Normal")
+      : game.level <= 45  ? qsTr("Hard")
+      : game.level <= 120 ? qsTr("Expert")
       :                     qsTr("Master")
 
     // ── Sound + progress ──────────────────────────────────────────────────────
