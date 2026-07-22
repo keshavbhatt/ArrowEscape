@@ -416,6 +416,7 @@ ApplicationWindow {
                     anchors.horizontalCenter: parent.horizontalCenter; width: parent.width
                     text: win.proPaid ? qsTr("Refill hearts") : qsTr("Refill hearts  ·  Pro")
                     fill: win.proPaid ? Theme.good : Theme.gold
+                    ink: win.proPaid ? "#ffffff" : Theme.goldInk
                     onClicked: win.proPaid ? game.addLives()
                                            : win.requestUpgrade(qsTr("Heart refills"))
                 }

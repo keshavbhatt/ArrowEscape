@@ -41,6 +41,9 @@ QtObject {
 
     // Golden accent for the Pro crown badge.
     readonly property color gold:    dark ? "#f0c552" : "#d99a1e"
+    // Text placed ON a gold fill: both golds are light, so white ink washes
+    // out — use a dark brown instead.
+    readonly property color goldInk: "#453208"
 
     // ── Text ──
     readonly property color title:   dark ? "#d9a24e" : "#a9772e"
