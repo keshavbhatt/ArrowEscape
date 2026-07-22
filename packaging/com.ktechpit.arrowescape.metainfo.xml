@@ -93,6 +93,14 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="2.0.0" date="2026-07-22">
+      <description>
+        <p>A big playability update.</p>
+        <p>Boards are dramatically more tangled: arrows are longer and wind deeper, and the difficulty ramps up fast — a dense labyrinth by level 13 instead of hundreds of easy levels.</p>
+        <p>Mouse navigation is fixed and expanded: smooth wheel zoom (including touchpads and hi-res wheels), drag to pan from anywhere on the board, plus on-screen zoom, fit and straighten controls. Hovering an arrow now highlights it so you always know which one you are about to tap.</p>
+        <p>Also fixes duplicated background music after minimising and improves button legibility.</p>
+      </description>
+    </release>
     <release version="0.1.0" date="2026-07-09">
       <description>
         <p>First public preview of ArrowEscape.</p>

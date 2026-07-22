@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(ArrowEscape
-    VERSION 0.1.0
+    VERSION 2.0.0
     DESCRIPTION "A calm slide-the-arrows-off-the-board puzzle for the desktop"
     HOMEPAGE_URL "https://ktechpit.com"
     LANGUAGES CXX)
