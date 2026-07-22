@@ -30,10 +30,30 @@ Item {
     function resetView() {
         const s = fitScale();
         _busy = true;
+        content.rotation = 0;
         content.scale = s;
         content.x = (width - boardW * s) / 2;
         content.y = (height - boardH * s) / 2;
         _busy = false;
+    }
+
+    // Straighten a board tilted by a rotating pinch (smoothly, keeping zoom/pan).
+    function resetOrientation() { unrotate.restart(); }
+    NumberAnimation {
+        id: unrotate
+        target: content; property: "rotation"; to: 0
+        duration: 200; easing.type: Easing.OutCubic
+        onStopped: root.clampView()
+    }
+
+    // Zoom by `factor` keeping the view point (x, y) fixed under the cursor.
+    function zoomAt(x, y, factor) {
+        const ns = Math.max(minScale, Math.min(maxScale, content.scale * factor));
+        const px = (x - content.x) / content.scale;
+        const py = (y - content.y) / content.scale;
+        content.scale = ns;
+        content.x = x - px * ns;
+        content.y = y - py * ns;
     }
 
     property bool _busy: false
@@ -72,6 +92,7 @@ Item {
 
     Item {
         id: content
+        objectName: "boardContent"   // dev hooks (AE_INPUTTEST) locate this
         width: root.boardW
         height: root.boardH
         transformOrigin: Item.TopLeft
@@ -116,9 +137,12 @@ Item {
     }
 
     // ── Navigation: pan (drag) + zoom (pinch / wheel) ──
+    // These cooperate with the snakes' per-cell TapHandlers via passive grabs:
+    // the DragHandler takes over (and cancels the tap) once the press moves
+    // past the drag threshold, so panning works from anywhere on the board.
     DragHandler {
         target: content
-        // A plain drag pans; taps still reach the per-cell hit areas.
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
     }
     PinchHandler {
         target: content
@@ -127,16 +151,42 @@ Item {
     }
     WheelHandler {
         target: null
-        acceptedModifiers: Qt.NoModifier
         onWheel: (ev) => {
-            const factor = ev.angleDelta.y > 0 ? 1.12 : 1 / 1.12;
-            const ns = Math.max(root.minScale, Math.min(root.maxScale, content.scale * factor));
-            // Zoom toward the cursor.
-            const px = (ev.x - content.x) / content.scale;
-            const py = (ev.y - content.y) / content.scale;
-            content.scale = ns;
-            content.x = ev.x - px * ns;
-            content.y = ev.y - py * ns;
+            // Wayland/touchpads send scroll-phase begin/end markers with a ZERO
+            // delta, and hi-res wheels send many small deltas. Naively mapping
+            // "delta > 0 ? in : out" zooms OUT on every marker, cancelling the
+            // gesture — so ignore empty events and scale by the actual delta
+            // (±120 = one classic notch = ×1.12), falling back to pixelDelta.
+            var dy = ev.angleDelta.y !== 0 ? ev.angleDelta.y : ev.pixelDelta.y * 2;
+            if (dy === 0)
+                return;
+            root.zoomAt(ev.x, ev.y, Math.pow(1.12, dy / 120));
         }
+    }
+
+    // ── Zoom controls: an always-visible fallback (and affordance) for zoom,
+    // independent of wheel/pinch hardware. Fit re-centres at fit-to-view scale.
+    component ZoomBtn: Rectangle {
+        property alias label: zt.text
+        signal clicked
+        width: 40; height: 40; radius: 20
+        color: Theme.surface
+        opacity: 0.92
+        border.width: 1
+        border.color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.25)
+        Text { id: zt; anchors.centerIn: parent; color: Theme.ink
+               font.pixelSize: 16; font.weight: Font.Bold }
+        TapHandler { onTapped: parent.clicked() }
+        HoverHandler { cursorShape: Qt.PointingHandCursor }
+    }
+    Column {
+        anchors { right: parent.right; bottom: parent.bottom; margins: 10 }
+        spacing: 8
+        ZoomBtn { label: "+";   onClicked: root.zoomAt(root.width / 2, root.height / 2, 1.25) }
+        ZoomBtn { label: "−";   onClicked: root.zoomAt(root.width / 2, root.height / 2, 1 / 1.25) }
+        ZoomBtn { label: qsTr("Fit"); onClicked: root.resetView() }
+        // Straighten-up appears only once a pinch has actually tilted the board.
+        ZoomBtn { label: "↺"; visible: content.rotation !== 0
+                  onClicked: root.resetOrientation() }
     }
 }

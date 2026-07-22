@@ -133,14 +133,20 @@ ApplicationWindow {
     // when minimized, hidden, or sent to the background; resume when it returns.
     // We check both `visibility` and `active`: some platforms (notably Wayland)
     // don't report a Minimized visibility, but the window does lose `active`.
+    // Guard on `playing`: window-state flips (maximize/unmaximize) fire several
+    // visibility/active changes in a row, and calling play() on an already-
+    // playing looping SoundEffect starts a SECOND overlapping stream on some
+    // audio backends — the music must only start when it isn't running.
     function syncMusic() {
         var foreground = win.active
                       && win.visibility !== Window.Minimized
                       && win.visibility !== Window.Hidden;
-        if (win.musicOn && foreground)
-            music.play();
-        else
+        if (win.musicOn && foreground) {
+            if (!music.playing)
+                music.play();
+        } else if (music.playing) {
             music.stop();
+        }
     }
     onMusicOnChanged: syncMusic()
     onVisibilityChanged: syncMusic()

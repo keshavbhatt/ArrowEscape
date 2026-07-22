@@ -232,17 +232,24 @@ Item {
     onHeightChanged:   canvas.requestPaint()
     Connections { target: Theme; function onDarkChanged() { canvas.requestPaint(); } }
 
-    // Invisible per-cell hit areas (disabled once launching).
+    // Invisible per-cell hit areas (disabled once launching). TapHandler, NOT
+    // MouseArea: a MouseArea grabs the press exclusively, which starves the
+    // Board's Drag/PinchHandlers — on a fully packed board that made panning
+    // impossible. A TapHandler only grabs passively, so a press that turns into
+    // a drag pans the board (the tap is cancelled), while a clean click taps.
     Repeater {
         model: snake.escaping ? [] : snake.cells
-        delegate: MouseArea {
+        delegate: Item {
             required property var modelData
             x: (modelData.x - snake.bb.minc) * snake.cellSize + snake.m
             y: (modelData.y - snake.bb.minr) * snake.cellSize + snake.m
             width: snake.cellSize
             height: snake.cellSize
-            cursorShape: Qt.PointingHandCursor
-            onClicked: snake.tapped(snake.arrowId)
+            TapHandler {
+                gesturePolicy: TapHandler.DragThreshold   // moving = pan, not a tap
+                onTapped: snake.tapped(snake.arrowId)
+            }
+            HoverHandler { cursorShape: Qt.PointingHandCursor }
         }
     }
 

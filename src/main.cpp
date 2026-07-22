@@ -6,8 +6,10 @@
 
 #include <QGuiApplication>
 #include <QIcon>
+#include <QMouseEvent>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickItem>
 #include <QQuickStyle>
 #include <QQuickWindow>
 #include <QTimer>
@@ -289,6 +291,133 @@ int main(int argc, char *argv[])
                     for (int t = 1; t <= 14; ++t)
                         QTimer::singleShot(t * 28, &app, grab);
                     QTimer::singleShot(600, &app, [&app] { app.quit(); });
+                });
+            }, Qt::QueuedConnection);
+    }
+    // Dev-only: AE_INPUTTEST synthesizes real mouse wheel / drag / click events
+    // through the window's event delivery and prints whether the board content
+    // zoomed, panned, and still receives taps — headless verification of the
+    // pan/zoom input chain. Inert unless set.
+    if (!qEnvironmentVariableIsEmpty("AE_INPUTTEST")) {
+        QObject::connect(&engine, &QQmlApplicationEngine::objectCreated, &app,
+            [startLevel, &app](QObject *obj, const QUrl &) {
+                auto *w = qobject_cast<QQuickWindow *>(obj);
+                if (!w) return;
+                w->setProperty("screen", 1);
+                auto *board = w->findChild<ArrowBoard *>();
+                if (board) board->startLevel(startLevel > 0 ? startLevel : 60);
+                QTimer::singleShot(1400, &app, [w, board, &app]() {
+                    auto *view    = w->findChild<QQuickItem *>(QStringLiteral("boardView"));
+                    auto *content = w->findChild<QQuickItem *>(QStringLiteral("boardContent"));
+                    if (!view || !content || !board) {
+                        printf("INPUTTEST FAIL missing boardView/boardContent/board\n");
+                        fflush(stdout); app.quit(); return;
+                    }
+                    ulong ts = 100000;
+                    const QPointF c = view->mapToScene(
+                        QPointF(view->width() / 2, view->height() / 2));
+
+                    // 1) Wheel-zoom in 5 notches at the board centre.
+                    const qreal s0 = content->scale();
+                    for (int i = 0; i < 5; ++i) {
+                        QWheelEvent wh(c, w->mapToGlobal(c.toPoint()), QPoint(),
+                                       QPoint(0, 120), Qt::NoButton, Qt::NoModifier,
+                                       Qt::NoScrollPhase, false);
+                        wh.setTimestamp(ts += 50);
+                        QCoreApplication::sendEvent(w, &wh);
+                    }
+                    QCoreApplication::processEvents();
+                    const qreal s1 = content->scale();
+                    printf("INPUTTEST wheel  scale %.3f -> %.3f  %s\n",
+                           s0, s1, s1 > s0 + 0.01 ? "OK" : "FAIL");
+
+                    // 1b) Wayland-style phased scroll: zero-delta begin/end
+                    // markers around hi-res updates must still zoom IN overall.
+                    const qreal sp0 = content->scale();
+                    const struct { int dy; Qt::ScrollPhase ph; } seq[] = {
+                        { 0, Qt::ScrollBegin }, { 40, Qt::ScrollUpdate },
+                        { 40, Qt::ScrollUpdate }, { 40, Qt::ScrollUpdate },
+                        { 0, Qt::ScrollEnd },
+                    };
+                    for (const auto &st : seq) {
+                        QWheelEvent wh(c, w->mapToGlobal(c.toPoint()), QPoint(),
+                                       QPoint(0, st.dy), Qt::NoButton, Qt::NoModifier,
+                                       st.ph, false);
+                        wh.setTimestamp(ts += 20);
+                        QCoreApplication::sendEvent(w, &wh);
+                    }
+                    QCoreApplication::processEvents();
+                    const qreal sp1 = content->scale();
+                    printf("INPUTTEST phased scale %.3f -> %.3f  %s\n",
+                           sp0, sp1, sp1 > sp0 + 0.01 ? "OK" : "FAIL");
+
+                    // 2) Drag from the centre (content now overflows the view).
+                    const qreal x0 = content->x(), y0 = content->y();
+                    QPointF p = c;
+                    QMouseEvent press(QEvent::MouseButtonPress, p, p,
+                                      w->mapToGlobal(p.toPoint()),
+                                      Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                    press.setTimestamp(ts += 60);
+                    QCoreApplication::sendEvent(w, &press);
+                    for (int i = 1; i <= 8; ++i) {
+                        p = c + QPointF(-11 * i, -8 * i);
+                        QMouseEvent move(QEvent::MouseMove, p, p,
+                                         w->mapToGlobal(p.toPoint()),
+                                         Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+                        move.setTimestamp(ts += 25);
+                        QCoreApplication::sendEvent(w, &move);
+                        QCoreApplication::processEvents();
+                    }
+                    QMouseEvent rel(QEvent::MouseButtonRelease, p, p,
+                                    w->mapToGlobal(p.toPoint()),
+                                    Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+                    rel.setTimestamp(ts += 25);
+                    QCoreApplication::sendEvent(w, &rel);
+                    QCoreApplication::processEvents();
+                    const bool panned = qAbs(content->x() - x0) + qAbs(content->y() - y0) > 1.0;
+                    printf("INPUTTEST drag   pos (%.0f,%.0f) -> (%.0f,%.0f)  %s\n",
+                           x0, y0, content->x(), content->y(), panned ? "OK" : "FAIL");
+
+                    // 3) A clean click on a snake must still tap it.
+                    bool tapReached = false;
+                    QObject::connect(board, &ArrowBoard::escaped, &app,
+                                     [&tapReached](int) { tapReached = true; });
+                    QObject::connect(board, &ArrowBoard::blocked, &app,
+                                     [&tapReached](int) { tapReached = true; });
+                    const QPointF click = view->mapToScene(
+                        QPointF(view->width() / 2, view->height() / 2));
+                    QMouseEvent cp(QEvent::MouseButtonPress, click, click,
+                                   w->mapToGlobal(click.toPoint()),
+                                   Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                    cp.setTimestamp(ts += 200);
+                    QCoreApplication::sendEvent(w, &cp);
+                    QMouseEvent cr(QEvent::MouseButtonRelease, click, click,
+                                   w->mapToGlobal(click.toPoint()),
+                                   Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+                    cr.setTimestamp(ts += 40);
+                    QCoreApplication::sendEvent(w, &cr);
+                    QCoreApplication::processEvents();
+                    printf("INPUTTEST click  tap %s\n", tapReached ? "OK" : "FAIL");
+                    fflush(stdout);
+
+                    // 4) Orientation reset: tilt the board as a rotating pinch
+                    // would, then straighten it via the reset button's path.
+                    // AE_INPUTTEST=<dir> additionally saves before/after PNGs.
+                    const QByteArray dir = qgetenv("AE_INPUTTEST");
+                    content->setProperty("rotation", 33.0);
+                    QCoreApplication::processEvents();
+                    if (dir.size() > 1)
+                        w->grabWindow().save(QString::fromUtf8(dir) + "/rot-before.png");
+                    QMetaObject::invokeMethod(view, "resetOrientation");
+                    QTimer::singleShot(500, &app, [w, content, dir, &app]() {
+                        const qreal r = content->rotation();
+                        printf("INPUTTEST rotate 33.0 -> %.1f  %s\n",
+                               r, qAbs(r) < 0.01 ? "OK" : "FAIL");
+                        fflush(stdout);
+                        if (dir.size() > 1)
+                            w->grabWindow().save(QString::fromUtf8(dir) + "/rot-after.png");
+                        app.quit();
+                    });
                 });
             }, Qt::QueuedConnection);
     }
