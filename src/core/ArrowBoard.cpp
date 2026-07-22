@@ -214,7 +214,11 @@ void ArrowBoard::generate(int rows, int cols, int lenMin, int lenMax, int longBi
             body.push_back(QPoint(cc, rr));
             present[rr * cols + cc] = 0; --remaining;
 
-            const int target = lenMin + rng->bounded(lenMax - lenMin + 1);
+            // Max of two draws biases targets toward lenMax: long, winding
+            // snakes are the tangle, so favour the top of the range.
+            const int span = lenMax - lenMin + 1;
+            const int target = lenMin + std::max(int(rng->bounded(span)),
+                                                 int(rng->bounded(span)));
             while (body.size() < target) {
                 QVector<int> nd;
                 for (int d = 0; d < 4; ++d) {
@@ -222,8 +226,22 @@ void ArrowBoard::generate(int rows, int cols, int lenMin, int lenMax, int longBi
                     if (P(cc + kDC[d], rr + kDR[d])) nd.push_back(d);
                 }
                 if (nd.isEmpty()) break;
-                int d = (nd.contains(g) && rng->bounded(100) < 60) ? g
-                                                                   : nd.at(rng->bounded(nd.size()));
+                // Prefer steps that can continue: a direction is "alive" if the
+                // cell it reaches has an onward present neighbour of its own.
+                // Otherwise the walk boxes itself in well short of `target`.
+                QVector<int> alive;
+                for (int d : nd) {
+                    const int nc = cc + kDC[d], nr = rr + kDR[d];
+                    for (int e = 0; e < 4; ++e) {
+                        if (e == hd) continue;
+                        const int ec = nc + kDC[e], er = nr + kDR[e];
+                        if (ec == cc && er == rr) continue;
+                        if (P(ec, er)) { alive.push_back(d); break; }
+                    }
+                }
+                const QVector<int> &pool = alive.isEmpty() ? nd : alive;
+                int d = (pool.contains(g) && rng->bounded(100) < 60) ? g
+                                                                     : pool.at(rng->bounded(pool.size()));
                 g = d; cc += kDC[d]; rr += kDR[d];
                 body.push_back(QPoint(cc, rr));
                 present[rr * cols + cc] = 0; --remaining;
@@ -234,10 +252,13 @@ void ArrowBoard::generate(int rows, int cols, int lenMin, int lenMax, int longBi
         m_arrows.push_back({ m_nextId++, body, hd, false });
     }
 
-    // Eliminate lone single-cell "arrows with just a head": append each to an
-    // adjacent EARLIER-peeled snake's tail. Its neighbours were all peeled before
-    // it, so it merges into one of them and simply leaves sooner — which never
-    // breaks the solve order (a cell leaving earlier can't block anything).
+    // Fold under-length snakes (shorter than lenMin, lone heads included) into
+    // an adjacent EARLIER-peeled snake's tail. The earlier snake escapes first,
+    // so the folded cells only leave the board sooner — a cell leaving earlier
+    // can't block anything, so the peel order stays a valid solution. Without
+    // this, late peels of the fragmented grid produce a litter of stubby arrows
+    // that make the board trivially easy to read.
+    const int mergeCap = lenMax + 4;   // don't grow grotesque mega-snakes
     bool merged = true;
     while (merged) {
         merged = false;
@@ -247,16 +268,28 @@ void ArrowBoard::generate(int rows, int cols, int lenMin, int lenMax, int longBi
             tailOf.insert(key(t.x(), t.y()), i);
         }
         for (int i = m_arrows.size() - 1; i >= 0 && !merged; --i) {
-            if (m_arrows[i].cells.size() != 1)
+            if (m_arrows[i].cells.size() >= lenMin)
                 continue;
-            const QPoint x = m_arrows[i].cells.first();
-            for (int d = 0; d < 4; ++d) {
-                const int nc = x.x() + kDC[d], nr = x.y() + kDR[d];
-                if (nc < 0 || nc >= cols || nr < 0 || nr >= rows)
-                    continue;
-                const auto it = tailOf.constFind(key(nc, nr));
-                if (it != tailOf.constEnd() && it.value() < i) {
-                    m_arrows[it.value()].cells.prepend(x);   // x becomes that snake's tail
+            // Either end of snake i may attach to an earlier snake's tail; the
+            // segment is oriented so its last cell abuts the host's tail.
+            for (int end = 0; end < 2 && !merged; ++end) {
+                const QPoint x = (end == 0) ? m_arrows[i].cells.last()
+                                            : m_arrows[i].cells.first();
+                for (int d = 0; d < 4; ++d) {
+                    const int nc = x.x() + kDC[d], nr = x.y() + kDR[d];
+                    if (nc < 0 || nc >= cols || nr < 0 || nr >= rows)
+                        continue;
+                    const auto it = tailOf.constFind(key(nc, nr));
+                    if (it == tailOf.constEnd() || it.value() >= i)
+                        continue;
+                    Arrow &host = m_arrows[it.value()];
+                    if (host.cells.size() + m_arrows[i].cells.size() > mergeCap)
+                        continue;
+                    QVector<QPoint> seg = m_arrows[i].cells;   // tail → head
+                    if (end == 1)
+                        std::reverse(seg.begin(), seg.end());
+                    for (int s = seg.size() - 1; s >= 0; --s)
+                        host.cells.prepend(seg.at(s));
                     m_arrows.remove(i);
                     merged = true;
                     break;
@@ -302,8 +335,10 @@ void ArrowBoard::startLevel(int level)
 
     const int cols    = std::clamp(int(std::lround(lerp(6, 30))), 6, 30);
     const int rows    = std::clamp(int(std::lround(cols * 1.4)), 9, 42);
-    const int lenMin   = int(std::lround(lerp(3, 4)));
-    const int lenMax   = int(std::lround(lerp(7, 12)));
+    // Long snakes ARE the puzzle: short arrows read at a glance, long winding
+    // ones force the player to trace how bodies cross each other's lanes.
+    const int lenMin   = int(std::lround(lerp(4, 6)));
+    const int lenMax   = int(std::lround(lerp(8, 16)));
     // Long-lane bias ramps up so early levels peel easily (short, outward lanes)
     // and late levels are a deeply tangled, fully-packed labyrinth.
     const int longBias = int(std::lround(lerp(35, 85)));
@@ -333,7 +368,7 @@ void ArrowBoard::startPicture(int cols, int rows, const QString &maskRows, int s
 
     // Picture boards are a fixed size (the shape); moderate snakes, strong
     // long-lane bias for a tangled look.
-    generate(rows, cols, 3, 8, 70);
+    generate(rows, cols, 4, 10, 70);
     emit levelChanged();
 }
 
