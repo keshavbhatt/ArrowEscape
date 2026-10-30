@@ -4,7 +4,7 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later AND LicenseRef-proprietary=https://github.com/keshavbhatt/ArrowEscape/blob/main/LICENSES/LicenseRef-Ktechpit-Licensing-Module.txt</project_license>
   <name>ArrowEscape</name>
-  <summary>A calm arrow-untangling puzzle</summary>
+  <summary>Relaxing arrow puzzle game</summary>
 
   <developer id="com.ktechpit">
     <name>Keshav Bhatt</name>
@@ -12,24 +12,41 @@
 
   <description>
     <p>
-      ArrowEscape is a calm, meditative logic puzzle for your Linux desktop, built
-      around one simple idea: every board is a tightly packed tangle of arrows, and
-      your job is to slide them all off, one clear path at a time.
+      ArrowEscape is a relaxing arrow puzzle game for Linux. Every board is a tightly packed
+      tangle of arrows: click an arrow to slide it off the board in the direction it points,
+      but only when its path to the edge is clear. Find the right order, untangle the maze and
+      clear the board. A calm logic puzzle and brain teaser with simple rules, deep strategy
+      and no timer.
+    </p>
+    <p>Gameplay:</p>
+    <ul>
+      <li>Endless levels, generated so every board always has a solution</li>
+      <li>Difficulty that climbs from gentle Easy boards to huge, densely tangled Master boards</li>
+      <li>Three lives per board, hints when you are stuck and a one-click restart</li>
+      <li>Hover an arrow to highlight it before you click</li>
+    </ul>
+    <p>Picture Packs:</p>
+    <ul>
+      <li>Boards shaped like pictures: shapes, animals, nature, objects and letters</li>
+      <li>A collection that fills in as you solve each picture</li>
+    </ul>
+    <p>Made for the desktop:</p>
+    <ul>
+      <li>Zoom with the mouse wheel or touchpad, drag to pan, and fit the board to the window</li>
+      <li>Works with a mouse or a touchscreen, including pinch to zoom</li>
+      <li>Light and dark themes, a soft piano soundtrack and slide-off sound effects you can turn off</li>
+      <li>Progress and settings are saved automatically; play offline</li>
+    </ul>
+    <p>
+      Free to play with endless levels and the Shapes pack. An optional one-time Pro upgrade,
+      with a 5-day free trial, adds the Animals, Nature, Objects and Letters picture packs,
+      colourful arrows and unlimited hints. No ads and no subscription.
     </p>
     <p>
-      Every board is a tightly packed tangle of arrows. Tap an arrow to slide it
-      off the edge in the direction it points — but only when its path is clear.
-      Find the right order, unpick the tangle, and clear the board. Simple rules,
-      deep strategy, no timer.
+      A calm alternative to mobile arrow puzzle games, for anyone who likes logic puzzles,
+      brain teasers and relaxing casual games. Works on Ubuntu, Fedora, Debian, Arch, openSUSE
+      and other Linux distributions, on Wayland and X11.
     </p>
-    <ul>
-      <li>Hundreds of hand-tight, fully-packed puzzles that always have a solution</li>
-      <li>Difficulty that climbs from a gentle Easy start to a huge, deeply tangled Master board</li>
-      <li>Satisfying slide-off animation and a soft piano soundtrack you can turn on or off</li>
-      <li>Zoomable, pannable board so the biggest levels stay easy to read</li>
-      <li>Light and dark themes; your progress and preferences are saved automatically</li>
-      <li>Fully offline — play anywhere, anytime</li>
-    </ul>
   </description>
 
   <launchable type="desktop-id">com.ktechpit.arrowescape.desktop</launchable>
@@ -54,7 +71,7 @@
     </screenshot>
     <screenshot>
       <image>https://raw.githubusercontent.com/keshavbhatt/ArrowEscape/main/screenshots/04-picture-packs.png</image>
-      <caption>Picture Packs — solve arrows arranged into shapes to reveal a picture</caption>
+      <caption>Picture Packs: solve arrows arranged into shapes to reveal a picture</caption>
     </screenshot>
     <screenshot>
       <image>https://raw.githubusercontent.com/keshavbhatt/ArrowEscape/main/screenshots/05-dark-mode.png</image>
@@ -62,7 +79,7 @@
     </screenshot>
     <screenshot>
       <image>https://raw.githubusercontent.com/keshavbhatt/ArrowEscape/main/screenshots/06-levels.png</image>
-      <caption>Hundreds of levels with saved progress</caption>
+      <caption>Endless levels with saved progress</caption>
     </screenshot>
   </screenshots>
 
@@ -71,6 +88,7 @@
   <url type="homepage">https://ktechpit.com/USS/public/product.php?slug=arrowescape</url>
   <url type="bugtracker">https://github.com/keshavbhatt/ArrowEscape/issues</url>
   <url type="vcs-browser">https://github.com/keshavbhatt/ArrowEscape</url>
+  <url type="contribute">https://github.com/keshavbhatt/ArrowEscape</url>
   <url type="donation">https://www.paypal.me/keshavnrj/9</url>
 
   <provides>
@@ -83,20 +101,44 @@
   </categories>
 
   <keywords>
+    <keyword>arrow</keyword>
     <keyword>puzzle</keyword>
-    <keyword>arrows</keyword>
     <keyword>logic</keyword>
+    <keyword>arrows</keyword>
     <keyword>brain</keyword>
-    <keyword>relax</keyword>
+    <keyword>maze</keyword>
+    <keyword>relaxing</keyword>
+    <keyword>untangle</keyword>
+    <keyword>casual</keyword>
+    <keyword>arrow puzzle</keyword>
+    <keyword>arrow game</keyword>
+    <keyword>puzzle game</keyword>
+    <keyword>logic puzzle</keyword>
+    <keyword>logic game</keyword>
+    <keyword>brain teaser</keyword>
+    <keyword>relaxing game</keyword>
+    <keyword>offline game</keyword>
   </keywords>
 
-  <content_rating type="oars-1.1"/>
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <recommends>
+    <control>pointing</control>
+  </recommends>
+  <supports>
+    <control>touch</control>
+  </supports>
+
+  <content_rating type="oars-1.1">
+    <content_attribute id="money-purchasing">intense</content_attribute>
+  </content_rating>
 
   <releases>
     <release version="2.0.0" date="2026-07-22">
       <description>
         <p>A big playability update.</p>
-        <p>Boards are dramatically more tangled: arrows are longer and wind deeper, and the difficulty ramps up fast — a dense labyrinth by level 13 instead of hundreds of easy levels.</p>
+        <p>Boards are dramatically more tangled: arrows are longer and wind deeper, and the difficulty ramps up fast: a dense labyrinth by level 13 instead of hundreds of easy levels.</p>
         <p>Mouse navigation is fixed and expanded: smooth wheel zoom (including touchpads and hi-res wheels), drag to pan from anywhere on the board, plus on-screen zoom, fit and straighten controls. Hovering an arrow now highlights it so you always know which one you are about to tap.</p>
         <p>Also fixes duplicated background music after minimising and improves button legibility.</p>
       </description>

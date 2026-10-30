@@ -1,14 +1,40 @@
-# ArrowEscape
+<p align="center">
+  <img src="screenshots/banner.png" alt="ArrowEscape: a calm arrow-untangling puzzle" width="100%">
+</p>
 
-A calm **slide-the-arrows-off-the-board** puzzle for the desktop.
+<p align="center">
+  A calm <b>slide-the-arrows-off-the-board</b> puzzle for the desktop. Every arrow points a
+  direction: click one to slide it off the board, but only if its whole lane to the edge is
+  clear. Blocked clicks cost a life; clear the board to win. Pure move-order logic, no
+  timer, and every level is solvable by construction.
+</p>
 
-Every arrow points a direction. **Click one to slide it off the board** — but
-only if its whole lane to the edge is clear. Blocked clicks cost a life. Clear
-the board to win. It's pure move-order logic, no timer. Levels are generated
-**solvable by construction**, so a board can never be stranded.
+<p align="center">
+  <a href="https://snapcraft.io/arrowescape"><img src="https://snapcraft.io/static/images/badges/en/snap-store-black.svg" alt="Get it from the Snap Store" height="56"></a>
+</p>
 
-Built with **Qt 6 Quick (QML) + C++20 / CMake**, mirroring the sibling
-*TypingMaster* scaffold.
+<table>
+  <tr>
+    <td width="33%"><img src="screenshots/01-home.png" alt="The home screen with levels and picture collections"></td>
+    <td width="33%"><img src="screenshots/02-play.png" alt="A level in play"></td>
+    <td width="33%"><img src="screenshots/03-master.png" alt="A dense Master level"></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="screenshots/04-picture-packs.png" alt="A picture level shaped like a heart"></td>
+    <td width="33%"><img src="screenshots/05-dark-mode.png" alt="Dark mode"></td>
+    <td width="33%"><img src="screenshots/06-levels.png" alt="The level select screen"></td>
+  </tr>
+</table>
+
+## Install
+
+**Snap**:
+
+```sh
+sudo snap install arrowescape
+```
+
+Built with **Qt 6 Quick (QML) + C++20 / CMake**.
 
 ## Architecture
 
