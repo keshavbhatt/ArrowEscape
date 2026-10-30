@@ -2,7 +2,7 @@
 <component type="desktop-application">
   <id>com.ktechpit.arrowescape</id>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>LicenseRef-proprietary=https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/LICENSE</project_license>
+  <project_license>GPL-3.0-or-later AND LicenseRef-proprietary=https://github.com/keshavbhatt/ArrowEscape/blob/main/LICENSES/LicenseRef-Ktechpit-Licensing-Module.txt</project_license>
   <name>ArrowEscape</name>
   <summary>A calm arrow-untangling puzzle</summary>
 
@@ -41,27 +41,27 @@
 
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/01-home.png</image>
+      <image>https://raw.githubusercontent.com/keshavbhatt/ArrowEscape/main/screenshots/01-home.png</image>
       <caption>Home screen with level progress and Picture Pack collections</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/02-play.png</image>
+      <image>https://raw.githubusercontent.com/keshavbhatt/ArrowEscape/main/screenshots/02-play.png</image>
       <caption>Unpick a tangled board of arrows one clear path at a time</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/03-master.png</image>
+      <image>https://raw.githubusercontent.com/keshavbhatt/ArrowEscape/main/screenshots/03-master.png</image>
       <caption>Difficulty climbs to huge, densely packed Master boards</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/04-picture-packs.png</image>
+      <image>https://raw.githubusercontent.com/keshavbhatt/ArrowEscape/main/screenshots/04-picture-packs.png</image>
       <caption>Picture Packs — solve arrows arranged into shapes to reveal a picture</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/05-dark-mode.png</image>
+      <image>https://raw.githubusercontent.com/keshavbhatt/ArrowEscape/main/screenshots/05-dark-mode.png</image>
       <caption>Easy on the eyes with a built-in dark theme</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/keshavbhatt/arrowescape-packaging/main/screenshots/06-levels.png</image>
+      <image>https://raw.githubusercontent.com/keshavbhatt/ArrowEscape/main/screenshots/06-levels.png</image>
       <caption>Hundreds of levels with saved progress</caption>
     </screenshot>
   </screenshots>
@@ -69,8 +69,8 @@
   <icon type="stock">com.ktechpit.arrowescape</icon>
 
   <url type="homepage">https://ktechpit.com/USS/public/product.php?slug=arrowescape</url>
-  <url type="bugtracker">https://github.com/keshavbhatt/arrowescape-packaging/issues</url>
-  <url type="vcs-browser">https://github.com/keshavbhatt/arrowescape-packaging</url>
+  <url type="bugtracker">https://github.com/keshavbhatt/ArrowEscape/issues</url>
+  <url type="vcs-browser">https://github.com/keshavbhatt/ArrowEscape</url>
   <url type="donation">https://www.paypal.me/keshavnrj/9</url>
 
   <provides>

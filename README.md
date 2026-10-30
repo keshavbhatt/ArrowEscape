@@ -67,10 +67,16 @@ snapcraft            # build arrowescape_*.snap
 snap install --dangerous ./arrowescape_*.snap   # local test install
 ```
 
-Store assets (icons, screenshots, banner, LICENSE) live in the sibling
-**`arrowescape-packaging`** repo, which the metainfo's screenshot/licence URLs
-point at.
+The banner (`banner.svg` is its source) and the store screenshots live in
+`screenshots/`; the metainfo's screenshot URLs point there.
 
 ## Research
 
 Game study and design notes live in [`DOCS/00-game-study.md`](DOCS/00-game-study.md).
+
+## Licence
+
+Open source: GPL-3.0-or-later for the game, with the licensing module (account, licence,
+evaluation-period and Pro verification code) under the Ktechpit Licensing Module License,
+which allows reading and building it but not changing, bypassing or redistributing it.
+The details, the paths and what this means for forks are in [LICENSING.md](LICENSING.md).

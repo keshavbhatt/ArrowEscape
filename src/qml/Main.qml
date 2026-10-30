@@ -583,7 +583,7 @@ ApplicationWindow {
                 AboutLink { label: qsTr("Website");         sub: "ktechpit.com"
                             url: "https://ktechpit.com/USS/public/product.php?slug=arrowescape" }
                 AboutLink { label: qsTr("Report an issue"); sub: "GitHub"
-                            url: "https://github.com/keshavbhatt/arrowescape-packaging/issues" }
+                            url: "https://github.com/keshavbhatt/ArrowEscape/issues" }
                 AboutLink { label: qsTr("Support the app"); sub: qsTr("Donate")
                             url: "https://www.paypal.me/keshavnrj/9" }
                 AboutLink { label: qsTr("More apps");       sub: qsTr("by KTechpit")
@@ -595,10 +595,16 @@ ApplicationWindow {
                 Text { anchors.horizontalCenter: parent.horizontalCenter
                        text: qsTr("Made by Keshav Bhatt · KTechpit")
                        color: Theme.textDim; font.pixelSize: 12 }
-                Text { anchors.horizontalCenter: parent.horizontalCenter
-                       text: qsTr("© 2026 KTechpit. All rights reserved.")
+                // The GPL's "Appropriate Legal Notices" (v3, section 5d), in one line and a link.
+                Text { width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
+                       textFormat: Text.StyledText
+                       text: qsTr("Copyright 2026 Keshav Bhatt. Free software under the GNU GPL v3 or later, with no warranty; the account and licence module has its own terms. <a href=\"%1\">Licences</a>")
+                             .arg("https://github.com/keshavbhatt/ArrowEscape/blob/main/LICENSING.md")
                        color: Qt.rgba(Theme.textDim.r, Theme.textDim.g, Theme.textDim.b, 0.8)
-                       font.pixelSize: 11 }
+                       linkColor: Theme.text
+                       font.pixelSize: 11
+                       onLinkActivated: (link) => Qt.openUrlExternally(link)
+                       HoverHandler { cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor } }
             }
         }
     }

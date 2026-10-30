@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="2400" height="800" viewBox="0 0 2400 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3ecdd"/>
+      <stop offset="1" stop-color="#e7ddca"/>
+    </linearGradient>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b8def"/>
+      <stop offset="1" stop-color="#3f6fd0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="2400" height="800" fill="url(#bg)"/>
+
+  <!-- faint ink-arrow maze motif on the right -->
+  <g stroke="#7a5a37" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"
+     fill="none" opacity="0.14">
+    <path d="M1500 180 h260 M1500 180 v120"/>
+    <path d="M1660 340 h200 v160"/>
+    <path d="M1560 520 h300"/>
+    <path d="M1780 300 v260"/>
+    <path d="M1520 620 h240 v-120"/>
+    <path d="M1980 220 v300 M1980 220 h-140"/>
+    <path d="M2060 400 h180"/>
+  </g>
+
+  <!-- app icon -->
+  <g transform="translate(1740 190)">
+    <rect x="0" y="0" width="420" height="420" rx="92" fill="url(#tile)"/>
+    <g fill="#ffffff">
+      <g transform="translate(210 226) rotate(-45)">
+        <path d="M0 -78 L44 -10 L17 -10 L17 68 L-17 68 L-17 -10 L-44 -10 Z"/>
+      </g>
+      <g transform="translate(120 292) rotate(-45)" opacity="0.7">
+        <path d="M0 -56 L31 -6 L12 -6 L12 50 L-12 50 L-12 -6 L-31 -6 Z"/>
+      </g>
+      <g transform="translate(300 158) rotate(-45)" opacity="0.55">
+        <path d="M0 -50 L28 -5 L10 -5 L10 44 L-10 44 L-10 -5 L-28 -5 Z"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- wordmark -->
+  <text x="180" y="380" font-family="'DejaVu Sans','Segoe UI',sans-serif" font-size="150"
+        font-weight="700" fill="#7a5a37">ArrowEscape</text>
+  <text x="184" y="470" font-family="'DejaVu Sans','Segoe UI',sans-serif" font-size="58"
+        font-weight="500" fill="#a9772e">A calm arrow-untangling puzzle</text>
+  <text x="184" y="560" font-family="'DejaVu Sans','Segoe UI',sans-serif" font-size="44"
+        font-weight="400" fill="#8a785c">Slide every arrow off the board, one clear path at a time.</text>
+</svg>

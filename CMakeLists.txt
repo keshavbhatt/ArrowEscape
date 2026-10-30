@@ -140,3 +140,9 @@ install(FILES packaging/${AE_APP_ID}.metainfo.xml
 
 install(FILES assets/icons/${AE_APP_ID}.svg
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps)
+
+# Licence texts: the GPL for the game, plus the licensing module's own terms.
+install(FILES LICENSE LICENSING.md
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${AE_APP_ID})
+install(DIRECTORY LICENSES
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${AE_APP_ID})
