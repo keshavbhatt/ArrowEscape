@@ -135,6 +135,12 @@
   </content_rating>
 
   <releases>
+    <release version="2.1.0" date="2026-10-30">
+      <description>
+        <p>ArrowEscape is now open source under the GNU GPL, version 3 or later.</p>
+        <p>A refreshed store listing with a clearer description, and the About dialog links to the source code and licences.</p>
+      </description>
+    </release>
     <release version="2.0.0" date="2026-07-22">
       <description>
         <p>A big playability update.</p>
